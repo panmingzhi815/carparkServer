@@ -9,6 +9,8 @@ import java.util.List;
 import javax.xml.ws.Dispatch;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Button;
@@ -239,6 +241,30 @@ public class SettingViewer extends Shell {
 		combo_inoutType.setBounds(235, 10, 91, 20);
 		combo_inoutType.select(0);
 		initView();
+		
+		table.addMouseListener(new MouseListener() {
+			
+			@Override
+			public void mouseUp(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mouseDown(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mouseDoubleClick(MouseEvent e) {
+				TableItem[] selection = table.getSelection();
+				if(selection == null || selection.length == 0){
+					return;
+				}
+				table.remove(table.getSelectionIndex());
+			}
+		});
 	}
 
 	private void initView() {

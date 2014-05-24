@@ -3,6 +3,8 @@ package com.dongluhitec.card.hardware;
 import java.net.InetAddress;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.mina.core.session.IoSession;
 import org.dom4j.Document;
@@ -11,14 +13,15 @@ import org.dom4j.Element;
 
 import com.dongluhitec.card.EncryptException;
 import com.dongluhitec.card.RSAUtils;
+import com.dongluhitec.card.model.Device;
 import com.google.common.base.Strings;
+import com.google.common.util.concurrent.Uninterruptibles;
 
 public class HardwareUtil {
 
 	private static final String MSGKEY = "message_prefix";
 
 	private static IoSession currentSession;
-	private static String deviceName;
 	public static String he_publicKey;
 
 	public static String checkSubpackage(IoSession session, Object message) {
@@ -60,20 +63,6 @@ public class HardwareUtil {
 		}
 	}
 
-	public static String responseDeviceInfo(IoSession session, Document dom) {
-		try{
-			currentSession = session;
-			deviceName = dom.getRootElement().element("monitor").element("device")
-					.element("deviceName").getText();
-
-			String value = "<dongluCarpark type=\"result\"><result>true</result></dongluCarpark>";
-			writeMsg(session, value);
-			return value;
-		}catch(Exception e){
-			throw new EncryptException("响应设备信息失败", e);
-		}
-	}
-
 	public static String responseSwipeCardInfo(IoSession session, Document dom,
 			Document dom2) {
 		try{
@@ -89,6 +78,27 @@ public class HardwareUtil {
 			throw new EncryptException("响应刷卡", e);
 		}
 	}
+	
+
+	public static void sendCardNO(IoSession session,String cardNO,String readerID,String deviceName) {
+		if(Strings.isNullOrEmpty(he_publicKey)){
+			return;
+		}
+		try{
+			Document document = DocumentHelper.createDocument();
+			Element root = document.addElement("dongluCarpark");
+			root.addAttribute("type", "swipeCard");
+			
+			Element deviceElement = root.addElement("device");
+			deviceElement.addElement("deviceName").setText(deviceName);
+			
+			root.addElement("cardSerialNumber").setText(cardNO);
+			root.addElement("CardReaderID").setText(readerID);
+			HardwareUtil.writeMsg(session, document.getRootElement().asXML());
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+	}
 
 	public static String responseDeviceControl(IoSession session, Document dom) {
 		try{
@@ -100,24 +110,38 @@ public class HardwareUtil {
 		}
 	}
 
-	public static void requestDeviceControl(Document state2Xml) {
-		try{
-			if (currentSession == null || currentSession.isConnected() == false
-					|| Strings.isNullOrEmpty(deviceName)) {
-				return;
-			}
-			Element rootElement = state2Xml.getRootElement();
-			Element deviceElement = rootElement.addElement("device");
-			deviceElement.addElement("deviceName").setText(deviceName);
-			writeMsg(currentSession, rootElement.asXML());
-		}catch(Exception e){
-			throw new EncryptException("请求设备控制失败", e);
-		}
-	}
-
 	public static String formatDateTime(Date date) {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		return sdf.format(date);
+	}
+	
+public static void sendDeviceInfo(IoSession session,List<Device> deviceList) {
+		
+		try {
+			Document dom = DocumentHelper.createDocument();
+			Element rootElement = dom.addElement("dongluCarpark");
+			rootElement.addAttribute("type", "deviceInfo");
+			Element station = rootElement.addElement("station");
+			station.addElement("account").setText("donglu");
+			station.addElement("password").setText( "liuhanzhong");
+			station.addElement("stationName").setText( "前门岗亭");
+			station.addElement("stationIP").setText( HardwareUtil.getLocalIP());
+			station.addElement("stationTime").setText( HardwareUtil.formatDateTime(new Date()));
+			
+			for (Device device : deviceList) {
+				Element monitor = rootElement.addElement("monitor");;
+				Element deviceElement = monitor.addElement("device");
+				deviceElement.addElement("deviceName").setText(device.getName());
+				deviceElement.addElement("deviceInOutType").setText(device.getType().equals("进口") == true ? "in":"out");
+				deviceElement.addElement("deviceDisplayAndVoiceInside").setText("false");
+				deviceElement.addElement("deviceDisplayAndVoiceOutside").setText("true");
+				deviceElement.addElement("deviceDisplaySupportChinese").setText("true");
+			}
+			
+			HardwareUtil.writeMsg(session, dom.getRootElement().asXML());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static String getLocalIP() {
@@ -167,11 +191,24 @@ public class HardwareUtil {
 			return null;
 		}
 	}
-
-	public static void main(String[] args) {
-		String a = "123";
-		String b = a.replace("1", "1235");
-		System.out.println(b);
+	
+	public static void changeDecretKey(IoSession ioSession) {
+		try{
+			Document document = DocumentHelper.createDocument();
+			Element dongluCarpark = document.addElement("dongluCarpark");
+			dongluCarpark.addAttribute("type", "publicKey");
+			Element publicKey = dongluCarpark.addElement("publicKey");
+			publicKey.setText(RSAUtils.getPublicKeyString());
+			ioSession.write(document.getRootElement().asXML());
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 	}
-
+	
+	public static void controlSpeed(long start, long speed){
+        long used = Math.abs(start - System.currentTimeMillis());
+        if(used < speed){
+            Uninterruptibles.sleepUninterruptibly(speed - used, TimeUnit.MILLISECONDS);
+        }
+    }
 }

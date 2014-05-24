@@ -15,9 +15,7 @@ public class MessageConstance {
     public final static int MESSAGE_DATA_STX_VALUE = 0X02;
     public final static int MESSAGE_DATA_ETX_VALUE = 0X03;
     
-    public static final byte Message_ReadNowRecord = (byte) 0XAC;
-    
-    public static final byte Message_PrintStr = (byte) 0XA9;
-
-    public static final byte Message_Voice = (byte) 0XAB;
+    public static final byte Message_ScreenVoiceDoor = (byte)0x03;
+    public static final byte Message_ReadNowRecord = (byte) 0X04;
+	public static final byte Message_OpenDoor = (byte)0x05;
 }

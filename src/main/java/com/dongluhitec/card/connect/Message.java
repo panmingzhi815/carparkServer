@@ -1,7 +1,7 @@
 package com.dongluhitec.card.connect;
 
-import com.dongluhitec.card.hardware.message.util.Bytenize;
-import com.dongluhitec.card.hardware.message.util.Utils;
+import com.dongluhitec.card.connect.util.Utils;
+
 
 
 /**

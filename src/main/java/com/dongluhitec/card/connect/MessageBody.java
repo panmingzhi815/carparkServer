@@ -1,6 +1,7 @@
 package com.dongluhitec.card.connect;
 
-import com.dongluhitec.card.hardware.message.util.Bytenize;
+import com.dongluhitec.card.connect.exception.DongluInvalidMessageException;
+
 
 public interface MessageBody extends Bytenize {
 

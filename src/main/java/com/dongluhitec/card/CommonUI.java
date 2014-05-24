@@ -21,6 +21,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 
+import com.dongluhitec.card.hardware.HardwareConfig;
 import com.dongluhitec.card.model.CarparkSetting;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -32,64 +33,98 @@ import com.jamierf.rxtx.RXTXLoader;
 
 @SuppressWarnings("unchecked")
 public class CommonUI {
-	
-	private static String password = "123456";
-	
+
 	private static ListeningExecutorService uiHelper = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(1));
-	
-	static{
-		try{
-			RXTXLoader.load();
-		}catch(Exception e){
-			System.out.println("加载串口驱动失败");
-			e.printStackTrace();
-		}
-	}
-	
-	public static void error(String title, String text) {
-		Shell shell = Display.getDefault().getActiveShell();
-		MessageBox messageBox = new MessageBox(shell, SWT.OK | SWT.CANCEL | SWT.ICON_ERROR);
-		messageBox.setText(title);
-		messageBox.setMessage(text);
-		messageBox.open();
+
+	public static void error(final String title, final String text) {
+		Display.getDefault().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				try{
+    				Shell shell = Display.getDefault().getActiveShell();
+    				MessageBox messageBox = new MessageBox(shell, SWT.OK | SWT.CANCEL | SWT.ICON_ERROR);
+    				messageBox.setText(title);
+    				messageBox.setMessage(text);
+    				messageBox.open();
+				}catch(Exception e){
+					
+				}
+			}
+		});
 	}
 
-	public static void info(String title, String text) {
-		Shell shell = Display.getDefault().getActiveShell();
-		MessageBox messageBox = new MessageBox(shell, SWT.OK | SWT.CANCEL | SWT.ICON_INFORMATION);
-		messageBox.setText(title);
-		messageBox.setMessage(text);
-		messageBox.open();
+	public static void info(final String title, final String text) {
+		Display.getDefault().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				try{
+					Shell shell = Display.getDefault().getActiveShell();
+					MessageBox messageBox = new MessageBox(shell, SWT.OK | SWT.CANCEL | SWT.ICON_INFORMATION);
+					messageBox.setText(title);
+					messageBox.setMessage(text);
+					messageBox.open();
+				}catch(Exception e){
+					
+				}
+			}
+		});
 	}
-	
-	public static boolean confirmPassword(){
+
+	public static boolean confirmPassword() {
 		Shell shell = Display.getDefault().getActiveShell();
-		InputDialog inputDialog = new InputDialog(shell,"验证","请输入密码","",new IInputValidator() {
+		InputDialog inputDialog = new InputDialog(shell, "验证", "请输入当前密码", "", new IInputValidator() {
 			@Override
 			public String isValid(String arg0) {
-				if(Strings.isNullOrEmpty(arg0)){
+				if (Strings.isNullOrEmpty(arg0)) {
 					return "密码不能为空";
 				}
-				if(arg0.length() < 6 || arg0.length() > 20){
+				if (arg0.length() < 6 || arg0.length() > 20) {
 					return "密码长度为6-20位";
 				}
 				return null;
 			}
 		});
-		
-		if(inputDialog.open() == InputDialog.OK){
+
+		if (inputDialog.open() == InputDialog.OK) {
 			String value = inputDialog.getValue();
-			if(value.equals(password)){
+			String password = HardwareConfig.readData().getPassword();
+			if (value.equals(password)) {
 				return true;
 			}
 			return confirmPassword();
-		}else{			
+		} else {
 			return false;
 		}
 	}
 
+	public static void changePassword() {
+		if (confirmPassword()) {
+			Shell shell2 = Display.getDefault().getActiveShell();
+			InputDialog inputDialog2 = new InputDialog(shell2, "验证", "请输入新密码", "", new IInputValidator() {
+				@Override
+				public String isValid(String arg0) {
+					if (Strings.isNullOrEmpty(arg0)) {
+						return "密码不能为空";
+					}
+					if (arg0.length() < 6 || arg0.length() > 20) {
+						return "密码长度为6-20位";
+					}
+					return null;
+				}
+			});
+
+			if (inputDialog2.open() == InputDialog.OK) {
+				String value2 = inputDialog2.getValue();
+				CarparkSetting readData = HardwareConfig.readData();
+				readData.setPassword(value2);
+				HardwareConfig.writeData(readData);
+			}
+		}
+
+	}
+
 	public static ListenableFuture<List<String>> getComList() throws IOException {
-		
+
 		ListenableFuture<List<String>> submit = uiHelper.submit(new Callable<List<String>>() {
 			@Override
 			public List<String> call() throws Exception {
@@ -105,7 +140,7 @@ public class CommonUI {
 		return submit;
 	}
 
-	public ListeningExecutorService getUIHelper(){
+	public ListeningExecutorService getUIHelper() {
 		return uiHelper;
 	}
 }

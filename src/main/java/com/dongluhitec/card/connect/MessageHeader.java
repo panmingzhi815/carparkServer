@@ -1,15 +1,11 @@
 package com.dongluhitec.card.connect;
 
-import com.dongluhitec.card.hardware.message.util.BCDAddressAdaptor;
-import com.dongluhitec.card.hardware.message.util.ByteUtils;
-import com.dongluhitec.card.hardware.message.util.Bytenize;
-import com.dongluhitec.card.hardware.message.util.SerialDeviceAddress;
+import com.dongluhitec.card.connect.exception.DongluInvalidMessageException;
+import com.dongluhitec.card.connect.util.BCDAddressAdaptor;
+import com.dongluhitec.card.connect.util.ByteUtils;
+import com.dongluhitec.card.connect.util.SerialDeviceAddress;
 
 public class MessageHeader implements Bytenize {
-	public static enum DirectonType {
-		request, response
-	}
-
 	private SerialDeviceAddress serialDeviceAddress;
 	private DirectonType directonType;
 	private byte functionCode;
@@ -43,6 +39,22 @@ public class MessageHeader implements Bytenize {
 		this.functionCode = functionCode;
 	}
 
+	public SerialDeviceAddress getSerialDeviceAddress() {
+		return serialDeviceAddress;
+	}
+
+	public void setSerialDeviceAddress(SerialDeviceAddress serialDeviceAddress) {
+		this.serialDeviceAddress = serialDeviceAddress;
+	}
+
+	public DirectonType getDirectonType() {
+		return directonType;
+	}
+
+	public void setDirectonType(DirectonType directonType) {
+		this.directonType = directonType;
+	}
+
 	/**
 	 * 检查消息头是否合法, 并初始化消息头对象。
 	 * 
@@ -57,9 +69,9 @@ public class MessageHeader implements Bytenize {
 
 		byte dir = header2[start + MessageConstance.MESSAGE_HEADER_PT];
 		if (dir == 'W') {
-			this.directonType = DirectonType.request;
+			this.directonType = DirectonType.请求;
 		} else if (dir == 'w') {
-			this.directonType = DirectonType.response;
+			this.directonType = DirectonType.响应;
 		} else
 			throw new DongluInvalidMessageException("消息头通讯方向不合法: DIR=[" + ByteUtils.byteToHexString(dir) + "]");
 
@@ -76,7 +88,7 @@ public class MessageHeader implements Bytenize {
 	public byte[] toBytes() {
 		byte[] header = new byte[MessageConstance.MESSAGE_HEADER_LENGTH];
 		header[MessageConstance.MESSAGE_HEADER_SOH] = MessageConstance.MESSAGE_HEADER_SOH_VALUE;
-		header[MessageConstance.MESSAGE_HEADER_PT] = (byte) (this.directonType == DirectonType.request ? 'W' : 'w');
+		header[MessageConstance.MESSAGE_HEADER_PT] = (byte) (this.directonType == DirectonType.请求 ? 'W' : 'w');
 
 		byte[] bytes2 = new BCDAddressAdaptor(this.serialDeviceAddress).getBytes();
 		System.arraycopy(bytes2, 0, header, MessageConstance.MESSAGE_HEADER_MID_ADDR, bytes2.length);
