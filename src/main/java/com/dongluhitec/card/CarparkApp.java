@@ -123,9 +123,12 @@ public class CarparkApp {
 						deviceExceTimes = 1;
 						return;
 					}
-					if(deviceExceTimes <= 10 && currentTimeMillis - deviceExceStart < 7000){
+					if(deviceExceTimes <= 10 && currentTimeMillis - deviceExceStart < 10000){
 						deviceExceStart = currentTimeMillis;
 						deviceExceTimes += 1;
+						return;
+					}
+					if(deviceExceTimes <= 10){
 						return;
 					}
 					deviceExceStart = 0;
