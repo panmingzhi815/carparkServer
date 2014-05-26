@@ -1,0 +1,20 @@
+<configuration scan="true" scanPeriod="5 seconds">
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
+            </pattern>
+        </encoder>
+    </appender>
+
+	 <appender name="SOCKET" class="ch.qos.logback.classic.net.SocketAppender">
+		<remoteHost>127.0.0.1</remoteHost>
+		<port>10999</port>
+		<reconnectionDelay>5000</reconnectionDelay>
+	</appender>
+
+    <root level="DEBUG">
+        <!-- <appender-ref ref="STDOUT"/> -->
+    </root>
+
+</configuration>
