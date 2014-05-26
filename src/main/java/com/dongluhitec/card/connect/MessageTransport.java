@@ -1,9 +1,7 @@
 package com.dongluhitec.card.connect;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.mina.core.future.CloseFuture;
 import org.apache.mina.core.future.ConnectFuture;
@@ -23,20 +21,10 @@ import org.apache.mina.transport.socket.nio.NioSocketConnector;
 
 import com.dongluhitec.card.connect.exception.DongluHWException;
 import com.dongluhitec.card.connect.filterChain.MessageFactory;
-import com.google.common.util.concurrent.Uninterruptibles;
-import com.jamierf.rxtx.RXTXLoader;
 
 public class MessageTransport {
 	public static enum TransportType {
 		TCP, COM;
-	}
-
-	static {
-		try {
-			RXTXLoader.load();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 
 	private final String address;

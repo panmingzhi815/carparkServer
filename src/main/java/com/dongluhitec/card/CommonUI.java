@@ -87,7 +87,8 @@ public class CommonUI {
 
 		if (inputDialog.open() == InputDialog.OK) {
 			String value = inputDialog.getValue();
-			String password = HardwareConfig.readData().getPassword();
+		
+			String password = HardwareConfig.getPassword();
 			if (value.equals(password)) {
 				return true;
 			}

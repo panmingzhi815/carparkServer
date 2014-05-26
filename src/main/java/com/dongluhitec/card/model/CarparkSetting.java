@@ -25,6 +25,9 @@ public class CarparkSetting implements Serializable{
 	}
 
 	public String getIp() {
+		if(ip == null){
+			return "192.168.1.1";
+		}
 		return ip;
 	}
 
@@ -33,6 +36,9 @@ public class CarparkSetting implements Serializable{
 	}
 
 	public String getPort() {
+		if(port == null){
+			return "9123";
+		}
 		return port;
 	}
 

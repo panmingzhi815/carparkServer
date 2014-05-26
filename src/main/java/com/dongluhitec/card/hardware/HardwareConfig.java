@@ -57,4 +57,12 @@ public class HardwareConfig {
 		}
 	}
 
+	public static String getPassword() {
+		File file = new File(dataFilePath);
+		if(!file.exists()){
+			return "123456";
+		}
+		return readData().getPassword();
+	}
+
 }

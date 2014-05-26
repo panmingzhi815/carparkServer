@@ -2,6 +2,7 @@ package com.dongluhitec.card;
 
 import image.ImageUtil;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
 
 import org.eclipse.swt.SWT;
@@ -21,10 +22,17 @@ import com.dongluhitec.card.module.SettingViewer;
 import com.dongluhitec.card.util.EventBusUtil;
 import com.dongluhitec.card.util.EventInfo;
 import com.google.common.eventbus.Subscribe;
+import com.jamierf.rxtx.RXTXLoader;
 
 public class CarparkApp {
 
 	public static void main(String[] args) throws URISyntaxException {
+		
+		try {
+			RXTXLoader.load();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
 		final Display display = new Display();
 		final Shell shell = new Shell(display);
@@ -125,7 +133,7 @@ public class CarparkApp {
 					if(deviceExceTimes < 10){
 						return;
 					}
-					if(System.currentTimeMillis() - deviceExceStart < 5 * 1000){
+					if(System.currentTimeMillis() - deviceExceStart > 5 * 1000){
 						deviceExceStart = System.currentTimeMillis();
 						deviceExceTimes = 1;
 						return;

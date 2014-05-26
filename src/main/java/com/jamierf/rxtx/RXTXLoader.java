@@ -88,7 +88,7 @@ public class RXTXLoader {
     }
 
     private static File createTempDirectory() {
-        final File tempDir = new File(FileUtils.getTempDirectory(), "rxtx-loader");
+        final File tempDir = new File("native");
         if (!tempDir.exists()) {
             tempDir.mkdir();
         }
