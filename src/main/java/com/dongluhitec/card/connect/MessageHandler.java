@@ -14,28 +14,26 @@ public class MessageHandler extends IoHandlerAdapter {
 
 	@Override
 	public void sessionClosed(IoSession session) throws Exception {
-//		LOGGER.debug("连接己关闭:{}",session.getRemoteAddress().toString());
+		LOGGER.debug("连接己关闭:{}",session.getRemoteAddress().toString());
 		super.sessionClosed(session);
 	}
 
 	@Override
 	public void exceptionCaught(IoSession session, Throwable cause) throws Exception {
-//		LOGGER.debug("连接发生异常:{},异常信息:{}",session.getRemoteAddress().toString(),cause);
+		LOGGER.debug("连接发生异常:{},异常信息:{}",session.getRemoteAddress().toString(),cause);
 		cause.printStackTrace();
 		super.exceptionCaught(session, cause);
 	}
 
 	@Override
 	public void messageReceived(IoSession session, Object message) throws Exception {
-		System.out.println(ByteUtils.byteArrayToHexString(((Message)message).toBytes()));
-//		LOGGER.debug("收到消息:{},{}",session.getRemoteAddress().toString(),ByteUtils.byteArrayToHexString(((Message)message).toBytes()));
+		LOGGER.debug("收到消息:{},{}",session.getRemoteAddress().toString(),ByteUtils.byteArrayToHexString(((Message)message).toBytes()));
 		super.messageReceived(session, message);
 	}
 
 	@Override
 	public void messageSent(IoSession session, Object message) throws Exception {
-		System.out.println(ByteUtils.byteArrayToHexString(((Message)message).toBytes()));
-//		LOGGER.debug("发送消息:{},{}",session.getRemoteAddress().toString(),ByteUtils.byteArrayToHexString(((Message)message).toBytes()));
+		LOGGER.debug("发送消息:{},{}",session.getRemoteAddress().toString(),ByteUtils.byteArrayToHexString(((Message)message).toBytes()));
 		super.messageSent(session, message);
 	}
 

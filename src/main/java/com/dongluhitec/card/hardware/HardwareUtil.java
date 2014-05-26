@@ -164,13 +164,11 @@ public static void sendDeviceInfo(IoSession session,List<Device> deviceList) {
 
 	public static String decode(String msg) {
 		try{
-			System.out.println("decode str:"+msg);
 			int indexOf = msg.indexOf(">")+1;
 			String subStr = msg.substring(indexOf, msg.length()-16);
 			
 			String decrypt = RSAUtils.decrypt(subStr, RSAUtils.getPrivateKey());
 			String replace = msg.replace(subStr, decrypt);
-			System.out.println("decoded str:"+msg);
 			return replace;
 		}catch(Exception e){
 			throw new EncryptException("解密失败", e);
@@ -179,12 +177,10 @@ public static void sendDeviceInfo(IoSession session,List<Device> deviceList) {
 
 	public static String encode(String msg) {
 		try{
-			System.out.println("encode str:"+msg);
 			int indexOf = msg.indexOf(">")+1;
 			String subStr = msg.substring(indexOf, msg.length()-16);
 			String encrypt = RSAUtils.encrypt(subStr, RSAUtils.getPublicKey(he_publicKey));
 			String replace = msg.replace(subStr,encrypt);
-			System.out.println("encoded str:"+replace);
 			return replace;
 		}catch(Exception e){
 			e.printStackTrace();

@@ -12,6 +12,8 @@
 		<rxtx.version>2.1.7</rxtx.version>
 		<mina.version>2.0.7</mina.version>
 		<commons-io.version>2.1</commons-io.version>
+		<slf4j.version>1.7.7</slf4j.version>
+		<logback.version>1.1.2</logback.version>
 	</properties>
 
 	<repositories>
@@ -55,39 +57,39 @@
 		</dependency>
 
 		<dependency>
-            <groupId>org.apache.mina</groupId>
-            <artifactId>mina-core</artifactId>
-            <version>${mina.version}</version>
-        </dependency>
+			<groupId>org.apache.mina</groupId>
+			<artifactId>mina-core</artifactId>
+			<version>${mina.version}</version>
+		</dependency>
 
-        <!--This is only end to help IntelliJ resolve the bundle.-->
-        <dependency>
-            <groupId>org.apache.mina</groupId>
-            <artifactId>mina-integration-beans</artifactId>
-            <version>${mina.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.mina</groupId>
-                    <artifactId>mina-core</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+		<!--This is only end to help IntelliJ resolve the bundle. -->
+		<dependency>
+			<groupId>org.apache.mina</groupId>
+			<artifactId>mina-integration-beans</artifactId>
+			<version>${mina.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.mina</groupId>
+					<artifactId>mina-core</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 
-        <dependency>
-            <groupId>org.apache.mina</groupId>
-            <artifactId>mina-transport-serial</artifactId>
-            <version>${mina.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.mina</groupId>
-                    <artifactId>mina-integration-beans</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.mina</groupId>
-                    <artifactId>mina-core</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+		<dependency>
+			<groupId>org.apache.mina</groupId>
+			<artifactId>mina-transport-serial</artifactId>
+			<version>${mina.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.mina</groupId>
+					<artifactId>mina-integration-beans</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.mina</groupId>
+					<artifactId>mina-core</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 
 		<dependency>
 			<groupId>commons-io</groupId>
@@ -106,6 +108,28 @@
 			<artifactId>junit</artifactId>
 			<version>4.11</version>
 			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-core</artifactId>
+			<version>${logback.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>${logback.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>${slf4j.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>${slf4j.version}</version>
 		</dependency>
 
 		<dependency>

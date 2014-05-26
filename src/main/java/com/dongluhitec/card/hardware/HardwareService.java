@@ -125,7 +125,6 @@ public class HardwareService {
 					cf = connector.connect(new InetSocketAddress(cs.getIp(), Integer.parseInt(cs.getPort())));
 					cf.awaitUninterruptibly(5,TimeUnit.SECONDS);
 					EventBusUtil.post(new EventInfo(EventType.外接服务通讯异常, "当前主机与对接服务通讯失败,3秒后会自动重联"));
-					System.out.println("连接外置服务失败");
 				}
 			}
 		},5000,1000);
