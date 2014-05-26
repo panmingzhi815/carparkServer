@@ -1,5 +1,6 @@
 package image;
 
+import java.io.InputStream;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,8 +22,9 @@ public class ImageUtil {
 			return image;
 		}
 
-		URL resource = ImageUtil.class.getResource(imageName);
-		image = new Image(Display.getDefault(), resource.getFile());
+//		URL resource = ImageUtil.class.getResource(imageName);
+		InputStream resourceAsStream = ImageUtil.class.getResourceAsStream(imageName);
+		image = new Image(Display.getDefault(), resourceAsStream);
 		imgMap.put(imageName, image);
 		return image;
 	}

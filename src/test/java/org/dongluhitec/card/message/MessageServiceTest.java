@@ -32,20 +32,21 @@ public class MessageServiceTest {
 	
 	@Test
 	public void sendOpenDoor() throws InterruptedException, ExecutionException{
-//		ListenableFuture<Boolean> carparkOpenDoor1 = messageService.carparkOpenDoor(device, OpenDoorEnum.抬闸);
-//		carparkOpenDoor1.get();
-//		
-//		ListenableFuture<Boolean> carparkOpenDoor2 = messageService.carparkOpenDoor(device, OpenDoorEnum.落闸);
-//		carparkOpenDoor2.get();
-//		
-//		ListenableFuture<Boolean> carparkOpenDoor3 = messageService.carparkOpenDoor(device, OpenDoorEnum.暂停);
-//		carparkOpenDoor3.get();
+		ListenableFuture<Boolean> carparkOpenDoor1 = messageService.carparkOpenDoor(device, OpenDoorEnum.抬闸);
+		carparkOpenDoor1.get();
+		Uninterruptibles.sleepUninterruptibly(2, TimeUnit.SECONDS);
+		ListenableFuture<Boolean> carparkOpenDoor2 = messageService.carparkOpenDoor(device, OpenDoorEnum.落闸);
+		carparkOpenDoor2.get();
+		Uninterruptibles.sleepUninterruptibly(2, TimeUnit.SECONDS);
+		ListenableFuture<Boolean> carparkOpenDoor3 = messageService.carparkOpenDoor(device, OpenDoorEnum.暂停);
+		carparkOpenDoor3.get();
 	}
 	
 	@Test
 	public void sendReadNowRecord() throws InterruptedException, ExecutionException{
-//		ListenableFuture<CarparkNowRecord> carparkReadNowRecord = messageService.carparkReadNowRecord(device);
-//		carparkReadNowRecord.get();
+		ListenableFuture<CarparkNowRecord> carparkReadNowRecord = messageService.carparkReadNowRecord(device);
+		carparkReadNowRecord.get();
+		Uninterruptibles.sleepUninterruptibly(2, TimeUnit.SECONDS);
 	}
 	
 	@Test
