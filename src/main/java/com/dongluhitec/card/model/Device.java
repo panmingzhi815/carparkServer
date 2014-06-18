@@ -13,6 +13,11 @@ public class Device implements Serializable{
 	private String address;
 	private String area;
 	private String inoutType;
+	private String supportChinese;
+	private String supportInsideVoice;
+	private String supportOutsideVoice;
+	
+	
 	public String getName() {
 		return name;
 	}
@@ -43,6 +48,25 @@ public class Device implements Serializable{
 	}
 	public void setInoutType(String inoutType) {
 		this.inoutType = inoutType;
+	}
+	
+	public String getSupportChinese() {
+		return supportChinese;
+	}
+	public void setSupportChinese(String supportChinese) {
+		this.supportChinese = supportChinese;
+	}
+	public String getSupportInsideVoice() {
+		return supportInsideVoice;
+	}
+	public void setSupportInsideVoice(String supportInsideVoice) {
+		this.supportInsideVoice = supportInsideVoice;
+	}
+	public String getSupportOutsideVoice() {
+		return supportOutsideVoice;
+	}
+	public void setSupportOutsideVoice(String supportOutsideVoice) {
+		this.supportOutsideVoice = supportOutsideVoice;
 	}
 	@Override
 	public String toString() {

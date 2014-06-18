@@ -13,6 +13,8 @@ public class CarparkSetting implements Serializable{
 	private String ip;
 	private String port;
 	
+	private String stationName;
+	
 	private List<Device> deviceList = Lists.newArrayList();
 	
 	public Device getDeviceByName(String deviceName){
@@ -22,6 +24,17 @@ public class CarparkSetting implements Serializable{
 			}
 		}
 		return null;
+	}
+
+	public String getStationName() {
+		if(stationName == null){
+			return "岗亭1";
+		}
+		return stationName;
+	}
+
+	public void setStationName(String stationName) {
+		this.stationName = stationName;
 	}
 
 	public String getIp() {

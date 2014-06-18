@@ -1,5 +1,6 @@
 package com.dongluhitec.card.hardware;
 
+import java.awt.TrayIcon.MessageType;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Timer;
@@ -136,7 +137,7 @@ public class HardwareService {
 		@Override
 		public void sessionCreated(IoSession session) throws Exception {
 			super.sessionCreated(session);
-			HardwareUtil.changeDecretKey(session);
+			HardwareUtil.sendDeviceInfo(session, cs);
 		}
 
 		@Override
@@ -146,56 +147,57 @@ public class HardwareService {
 			if(checkSubpackage == null){
 				return;
 			}
-			if(checkSubpackage.startsWith("publicKey", 21)){
-				HardwareUtil.responsePublicKey_server(session,checkSubpackage);
-				HardwareUtil.sendDeviceInfo(session, cs.getDeviceList());
-				return;
-			}
 			
-			final Document dom = DocumentHelper.parseText(HardwareUtil.decode(checkSubpackage));
+			WebMessage wm = new WebMessage(checkSubpackage);
+			
+			final Document dom = DocumentHelper.parseText(wm.getContent());
 			final Element rootElement = dom.getRootElement();
 			
-			if(rootElement.attributeValue("type").equals("deviceControl")){
+			if(wm.getType() == WebMessageType.成功){
+				HardwareUtil.responseResult(session,dom);
+			}
+			
+			if(wm.getType() == WebMessageType.设备控制){
 				new Thread(new Runnable() {
 					@Override
 					public void run() {
-						HardwareUtil.responseDeviceControl(session,dom);
-						
-						Element controlElement = rootElement.element("control");
-						Element element = rootElement.element("device");
-						
-						String deviceName = element.element("deviceName").getTextTrim();
-						String gate = controlElement.element("gate").getTextTrim();
-						String Insidevoice = controlElement.element("insideVoice").getTextTrim();
-						String Outsidevoice = controlElement.element("outsideVoice").getTextTrim();
-						String InsideScreen = controlElement.element("insideScreen").getTextTrim();
-						String OutsideScreen = controlElement.element("outsideScreen").getTextTrim();
-						String InsideScreenAndVoiceData = controlElement.element("insideScreenAndVoiceData").getTextTrim();
-						String OutsideScreenAndVoiceData = controlElement.element("outsideScreenAndVoiceData").getTextTrim();
-						
-						Device device = cs.getDeviceByName(deviceName);
-						if(device == null){
-							return;
-						}
-						if(InsideScreen.equals("true")){
-							int voice = Insidevoice.equals("false")==true ? 1 : 10;
-							messageService.carparkScreenVoiceDoor(device, 1, voice, 0, 0, InsideScreenAndVoiceData);
-							Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
-						}
-						if(OutsideScreen.equals("true")){
-							int voice = Outsidevoice.equals("false")==true ? 1 : 10;
-							messageService.carparkScreenVoiceDoor(device, 2, voice, 0, 0, OutsideScreenAndVoiceData);
-							Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
-						}
-						if(!gate.equals("false")){							
-							messageService.carparkOpenDoor(device, OpenDoorEnum.parse(OpenDoorEnum.parse(gate)));
+						try{
+							Element controlElement = rootElement.element("control");
+							Element element = rootElement.element("device");
+							
+							String deviceName = element.element("deviceName").getTextTrim();
+							String gate = controlElement.element("gate").getTextTrim();
+							String Insidevoice = controlElement.element("insideVoice").getTextTrim();
+							String Outsidevoice = controlElement.element("outsideVoice").getTextTrim();
+							String InsideScreen = controlElement.element("insideScreen").getTextTrim();
+							String OutsideScreen = controlElement.element("outsideScreen").getTextTrim();
+							String InsideScreenAndVoiceData = controlElement.element("insideScreenAndVoiceData").getTextTrim();
+							String OutsideScreenAndVoiceData = controlElement.element("outsideScreenAndVoiceData").getTextTrim();
+							
+							Device device = cs.getDeviceByName(deviceName);
+							if(device == null){
+								return;
+							}
+							if(InsideScreen.equals("true")){
+								int voice = Insidevoice.equals("false")==true ? 1 : 10;
+								messageService.carparkScreenVoiceDoor(device, 1, voice, 0, 0, InsideScreenAndVoiceData);
+								Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
+							}
+							if(OutsideScreen.equals("true")){
+								int voice = Outsidevoice.equals("false")==true ? 1 : 10;
+								messageService.carparkScreenVoiceDoor(device, 2, voice, 0, 0, OutsideScreenAndVoiceData);
+								Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
+							}
+							if(!gate.equals("false")){							
+								messageService.carparkOpenDoor(device, OpenDoorEnum.parse(OpenDoorEnum.parse(gate)));
+							}
+							
+							HardwareUtil.responseDeviceControl(session,dom);		
+						}catch(Exception e){
+							
 						}
 					}
 				}).start();
-			}
-			
-			if(rootElement.attributeValue("type").equals("result")){
-				
 			}
 		}
 

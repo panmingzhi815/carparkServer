@@ -51,6 +51,13 @@ public class SettingViewer extends Shell {
 
 	private Combo combo_inoutType;
 
+	private Combo combo_supportChinese;
+
+	private Combo combo_supportIn;
+
+	private Combo combo_supportOut;
+	private Text text;
+
 	/**
 	 * Launch the application.
 	 * @param args
@@ -81,52 +88,52 @@ public class SettingViewer extends Shell {
 		
 		Label lblIp = new Label(group, SWT.NONE);
 		lblIp.setAlignment(SWT.RIGHT);
-		lblIp.setBounds(10, 22, 54, 12);
+		lblIp.setBounds(26, 22, 54, 12);
 		lblIp.setText("IP地址:");
 		
 		text_ip = new Text(group, SWT.BORDER);
 		text_ip.setText("192.168.1.1");
-		text_ip.setBounds(70, 19, 105, 18);
+		text_ip.setBounds(86, 19, 105, 18);
 		
 		Label label = new Label(group, SWT.NONE);
 		label.setAlignment(SWT.RIGHT);
-		label.setBounds(191, 22, 49, 12);
+		label.setBounds(207, 22, 49, 12);
 		label.setText("端口:");
 		
 		text_port = new Text(group, SWT.BORDER);
 		text_port.setText("10001");
-		text_port.setBounds(245, 19, 91, 18);
+		text_port.setBounds(261, 19, 91, 18);
 		
 		Group group_1 = new Group(this, SWT.NONE);
 		group_1.setText("监控设备");
-		group_1.setBounds(10, 63, 473, 279);
+		group_1.setBounds(10, 63, 473, 379);
 		
 		Composite composite = new Composite(group_1, SWT.BORDER);
-		composite.setBounds(10, 20, 452, 87);
+		composite.setBounds(9, 68, 452, 110);
 		
 		Label label_1 = new Label(composite, SWT.NONE);
 		label_1.setAlignment(SWT.RIGHT);
-		label_1.setBounds(0, 37, 60, 12);
+		label_1.setBounds(10, 35, 60, 12);
 		label_1.setText("通讯类型:");
 		
 		combo_deviceType = new Combo(composite, SWT.READ_ONLY);
 		combo_deviceType.setItems(new String[] {"COM", "TCP"});
-		combo_deviceType.setBounds(60, 33, 105, 20);
+		combo_deviceType.setBounds(76, 31, 105, 20);
 		combo_deviceType.select(0);
 		
 		Label label_2 = new Label(composite, SWT.NONE);
 		label_2.setAlignment(SWT.RIGHT);
-		label_2.setBounds(0, 60, 60, 12);
-		label_2.setText("设备地址:");
+		label_2.setBounds(10, 57, 60, 12);
+		label_2.setText("通讯地址:");
 		
 		Label label_3 = new Label(composite, SWT.NONE);
 		label_3.setAlignment(SWT.RIGHT);
-		label_3.setBounds(171, 35, 60, 16);
-		label_3.setText("设备区控:");
+		label_3.setBounds(195, 33, 60, 16);
+		label_3.setText("设备地址:");
 		
 		text_deviceArea = new Text(composite, SWT.BORDER);
 		text_deviceArea.setText("1.1");
-		text_deviceArea.setBounds(235, 34, 91, 18);
+		text_deviceArea.setBounds(259, 32, 91, 18);
 		
 		Button button = new Button(composite, SWT.NONE);
 		button.addSelectionListener(new SelectionAdapter() {
@@ -137,6 +144,10 @@ public class SettingViewer extends Shell {
 				String deviceArea = text_deviceArea.getText().trim();
 				String deviceName = text_deviceName.getText().trim();
 				String deviceInoutType = combo_inoutType.getText().trim();
+				String chineseSupport = combo_supportChinese.getText().trim();
+				String insideSupport = combo_supportIn.getText().trim();
+				String outSideSupport = combo_supportOut.getText().trim();
+				
 				if(Strings.isNullOrEmpty(deviceType) || 
 				Strings.isNullOrEmpty(deviceAddress) || 
 				Strings.isNullOrEmpty(deviceArea) || 
@@ -146,26 +157,27 @@ public class SettingViewer extends Shell {
 				}
 
 				TableItem ti = new TableItem(table, SWT.BORDER);
-				ti.setText(new String[]{deviceName,deviceType,deviceAddress,deviceArea,deviceInoutType});
+				ti.setText(new String[]{deviceName,deviceType,deviceAddress,deviceArea,deviceInoutType,chineseSupport,insideSupport,outSideSupport});
 			}
 		});
 		button.setImage(ImageUtil.getImg("add_16.ico"));
-		button.setBounds(341, 32, 72, 22);
+		button.setBounds(366, 47, 72, 22);
 		button.setText("添加");
 		
 		Label label_4 = new Label(composite, SWT.NONE);
 		label_4.setAlignment(SWT.RIGHT);
-		label_4.setBounds(0, 14, 60, 12);
+		label_4.setBounds(10, 13, 60, 12);
 		label_4.setText("设备名称:");
 		
 		text_deviceName = new Text(composite, SWT.BORDER);
-		text_deviceName.setBounds(60, 11, 105, 18);
+		text_deviceName.setBounds(76, 10, 105, 18);
 		
 		combo_deviceAddress = new Combo(composite, SWT.NONE);
-		combo_deviceAddress.setBounds(60, 57, 105, 20);
+		combo_deviceAddress.setBounds(76, 53, 105, 20);
 		
 		table = new Table(group_1, SWT.BORDER | SWT.FULL_SELECTION);
-		table.setBounds(10, 113, 453, 156);
+		table.setToolTipText("岗亭名称");
+		table.setBounds(9, 183, 453, 188);
 		table.setHeaderVisible(true);
 		table.setLinesVisible(true);
 		
@@ -175,19 +187,31 @@ public class SettingViewer extends Shell {
 		
 		TableColumn tableColumn_1 = new TableColumn(table, SWT.NONE);
 		tableColumn_1.setWidth(69);
-		tableColumn_1.setText("设备类型");
+		tableColumn_1.setText("通讯类型");
 		
 		TableColumn tableColumn_2 = new TableColumn(table, SWT.NONE);
 		tableColumn_2.setWidth(95);
-		tableColumn_2.setText("设备地址");
+		tableColumn_2.setText("通讯地址");
 		
 		TableColumn tableColumn_4 = new TableColumn(table, SWT.NONE);
 		tableColumn_4.setWidth(74);
-		tableColumn_4.setText("设备区控");
+		tableColumn_4.setText("设备地址");
 		
 		TableColumn tableColumn = new TableColumn(table, SWT.NONE);
 		tableColumn.setWidth(100);
 		tableColumn.setText("进出类型");
+		
+		TableColumn tableColumn5 = new TableColumn(table, SWT.NONE);
+		tableColumn5.setWidth(100);
+		tableColumn5.setText("中文支持");
+		
+		TableColumn tableColumn6 = new TableColumn(table, SWT.NONE);
+		tableColumn6.setWidth(100);
+		tableColumn6.setText("内置音显");
+		
+		TableColumn tableColumn7 = new TableColumn(table, SWT.NONE);
+		tableColumn7.setWidth(100);
+		tableColumn7.setText("外置音显");
 		
 		Button button_1 = new Button(this, SWT.NONE);
 		button_1.addSelectionListener(new SelectionAdapter() {
@@ -196,6 +220,7 @@ public class SettingViewer extends Shell {
 				CarparkSetting cs = new CarparkSetting();
 				cs.setIp(text_ip.getText().trim());
 				cs.setPort(text_port.getText().trim());
+				cs.setStationName(text.getText().trim());
 				
 				TableItem[] items = table.getItems();
 				for (TableItem tableItem : items) {
@@ -205,6 +230,10 @@ public class SettingViewer extends Shell {
 					device.setAddress(tableItem.getText(2));
 					device.setArea(tableItem.getText(3));
 					device.setInoutType(tableItem.getText(4));
+					device.setSupportChinese(tableItem.getText(5));
+					device.setSupportInsideVoice(tableItem.getText(6));
+					device.setSupportOutsideVoice(tableItem.getText(7));
+					
 					cs.getDeviceList().add(device);
 				}
 				
@@ -226,20 +255,64 @@ public class SettingViewer extends Shell {
 			}
 		});
 		button_1.setImage(ImageUtil.getImg("save_16.ico"));
-		button_1.setBounds(210, 348, 72, 22);
+		button_1.setBounds(209, 449, 72, 22);
 		button_1.setText("保存");
 		createContents();
 		
 		initCOMCombo(combo_deviceAddress);
 		
 		Label label_5 = new Label(composite, SWT.NONE);
-		label_5.setBounds(177, 14, 54, 12);
+		label_5.setBounds(201, 13, 54, 12);
 		label_5.setText("进出类型:");
 		
 		combo_inoutType = new Combo(composite, SWT.READ_ONLY);
 		combo_inoutType.setItems(new String[] {"进口", "出口"});
-		combo_inoutType.setBounds(235, 10, 91, 20);
+		combo_inoutType.setBounds(259, 9, 91, 20);
 		combo_inoutType.select(0);
+		
+		Label label_6 = new Label(composite, SWT.NONE);
+		label_6.setText("中文支持:");
+		label_6.setAlignment(SWT.RIGHT);
+		label_6.setBounds(195, 55, 60, 16);
+		
+		combo_supportChinese = new Combo(composite, SWT.READ_ONLY);
+		combo_supportChinese.setItems(new String[] {"支持", "不支持"});
+		combo_supportChinese.setBounds(259, 53, 91, 20);
+		combo_supportChinese.select(0);
+		
+		Label label_7 = new Label(composite, SWT.NONE);
+		label_7.setToolTipText("是否支持内置声音播报与显示功能");
+		label_7.setText("内置音显:");
+		label_7.setAlignment(SWT.RIGHT);
+		label_7.setBounds(10, 80, 60, 12);
+		
+		combo_supportIn = new Combo(composite, SWT.NONE);
+		combo_supportIn.setToolTipText("是否支持内置声音播报与显示功能");
+		combo_supportIn.setItems(new String[] {"支持", "不支持"});
+		combo_supportIn.setBounds(76, 76, 105, 20);
+		combo_supportIn.select(0);
+		
+		Label label_8 = new Label(composite, SWT.NONE);
+		label_8.setToolTipText("是否支持外置声音播报与显示功能");
+		label_8.setText("外置音显:");
+		label_8.setAlignment(SWT.RIGHT);
+		label_8.setBounds(195, 78, 60, 16);
+		
+		combo_supportOut = new Combo(composite, SWT.READ_ONLY);
+		combo_supportOut.setToolTipText("是否支持内置声音播报与显示功能");
+		combo_supportOut.setItems(new String[] {"支持", "不支持"});
+		combo_supportOut.setBounds(259, 76, 91, 20);
+		combo_supportOut.select(0);
+		
+		Composite composite_1 = new Composite(group_1, SWT.BORDER);
+		composite_1.setBounds(9, 27, 452, 32);
+		
+		Label label_9 = new Label(composite_1, SWT.NONE);
+		label_9.setBounds(20, 10, 54, 12);
+		label_9.setText("岗亭名称:");
+		
+		text = new Text(composite_1, SWT.BORDER);
+		text.setBounds(74, 7, 273, 18);
 		initView();
 		
 		table.addMouseListener(new MouseListener() {
@@ -274,6 +347,7 @@ public class SettingViewer extends Shell {
 		}
 		text_ip.setText(readData.getIp());
 		text_port.setText(readData.getPort());
+		text.setText(readData.getStationName());
 		
 		List<Device> deviceList = readData.getDeviceList();
 		for (Device device : deviceList) {
@@ -283,7 +357,11 @@ public class SettingViewer extends Shell {
 			String deviceAddress = device.getAddress();
 			String deviceArea = device.getArea();
 			String inoutType = device.getInoutType();
-			ti.setText(new String[]{deviceName,deviceType,deviceAddress,deviceArea,inoutType});
+			String supportChinese = device.getSupportChinese();
+			String supportInsideVoice = device.getSupportInsideVoice();
+			String supportOutsideVoice = device.getSupportOutsideVoice();
+			
+			ti.setText(new String[]{deviceName,deviceType,deviceAddress,deviceArea,inoutType,supportChinese,supportInsideVoice,supportOutsideVoice});
 		}
 	}
 
@@ -320,7 +398,7 @@ public class SettingViewer extends Shell {
 	 */
 	protected void createContents() {
 		setText("东陆停车场");
-		setSize(502, 414);
+		setSize(502, 512);
 
 	}
 

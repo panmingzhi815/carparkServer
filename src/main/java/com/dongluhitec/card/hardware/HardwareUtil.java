@@ -13,6 +13,8 @@ import org.dom4j.Element;
 
 import com.dongluhitec.card.EncryptException;
 import com.dongluhitec.card.RSAUtils;
+import com.dongluhitec.card.connect.Message;
+import com.dongluhitec.card.model.CarparkSetting;
 import com.dongluhitec.card.model.Device;
 import com.google.common.base.Strings;
 import com.google.common.util.concurrent.Uninterruptibles;
@@ -21,22 +23,24 @@ public class HardwareUtil {
 
 	private static final String MSGKEY = "message_prefix";
 
-	private static IoSession currentSession;
 	public static String he_publicKey;
+
+	private static String session_id;
 
 	public static String checkSubpackage(IoSession session, Object message) {
 		String msg = ((String) message).trim();
-		if (msg.startsWith("<dongluCarpark")) {
+		if (session.getAttribute(MSGKEY) == null) {
 			session.setAttribute(MSGKEY, "");
 		}
-		// 在此处对数据的分包进行拼接
+
 		String oldValue = (String) session.getAttribute(MSGKEY);
 		session.setAttribute(MSGKEY, oldValue + msg);
-		// 如果数据已经完整,早返回整个数据
+
 		if (msg.endsWith("</dongluCarpark>")) {
-			return (String) session.getAttribute(MSGKEY);
+			String result = (String) session.getAttribute(MSGKEY);
+			session.removeAttribute(MSGKEY);
+			return result;
 		}
-		// 数据不完整,则返回空
 		return null;
 	}
 
@@ -52,8 +56,7 @@ public class HardwareUtil {
 		}
 	}
 
-	public static void responsePublicKey_server(IoSession session,
-			String message) {
+	public static void responsePublicKey_server(IoSession session, String message) {
 		try {
 			Document dom = DocumentHelper.parseText(message);
 			Element element = dom.getRootElement().element("publicKey");
@@ -63,49 +66,32 @@ public class HardwareUtil {
 		}
 	}
 
-	public static String responseSwipeCardInfo(IoSession session, Document dom,
-			Document dom2) {
-		try{
-			Element rootElement = dom.getRootElement();
-			String deviceName = rootElement.element("device").element("deviceName")
-					.getText();
-
-			dom2.getRootElement().addElement("device").addElement("deviceName")
-					.setText(deviceName);
-			writeMsg(session, dom2.getRootElement().asXML());
-			return dom2.getRootElement().asXML();
-		}catch(Exception e){
-			throw new EncryptException("响应刷卡", e);
-		}
-	}
-	
-
-	public static void sendCardNO(IoSession session,String cardNO,String readerID,String deviceName) {
-		if(Strings.isNullOrEmpty(he_publicKey)){
-			return;
-		}
-		try{
+	public static void sendCardNO(IoSession session, String cardNO, String readerID, String deviceName) {
+		try {
 			Document document = DocumentHelper.createDocument();
 			Element root = document.addElement("dongluCarpark");
-			root.addAttribute("type", "swipeCard");
-			
+			root.addAttribute("session_id", session_id);
+
 			Element deviceElement = root.addElement("device");
 			deviceElement.addElement("deviceName").setText(deviceName);
-			
+
 			root.addElement("cardSerialNumber").setText(cardNO);
 			root.addElement("CardReaderID").setText(readerID);
-			HardwareUtil.writeMsg(session, document.getRootElement().asXML());
-		}catch(Exception e){
+
+			WebMessage wm = new WebMessage(WebMessageType.发送卡号, document.getRootElement().asXML());
+			HardwareUtil.writeMsg(session, wm.toString());
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
 	public static String responseDeviceControl(IoSession session, Document dom) {
-		try{
-			String value = "<dongluCarpark type=\"result\"><result>true</result></dongluCarpark>";
-			writeMsg(session, value);
-			return value;
-		}catch(Exception e){
+		try {
+			String value = "<dongluCarpark><result>true</result></dongluCarpark>";
+			WebMessage wm = new WebMessage(WebMessageType.成功, value);
+			writeMsg(session, wm.toString());
+			return wm.toString();
+		} catch (Exception e) {
 			throw new EncryptException("响应设备控制失败", e);
 		}
 	}
@@ -114,31 +100,29 @@ public class HardwareUtil {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		return sdf.format(date);
 	}
-	
-public static void sendDeviceInfo(IoSession session,List<Device> deviceList) {
-		
+
+	public static void sendDeviceInfo(IoSession session, CarparkSetting cs) {
 		try {
 			Document dom = DocumentHelper.createDocument();
 			Element rootElement = dom.addElement("dongluCarpark");
-			rootElement.addAttribute("type", "deviceInfo");
 			Element station = rootElement.addElement("station");
 			station.addElement("account").setText("donglu");
-			station.addElement("password").setText( "liuhanzhong");
-			station.addElement("stationName").setText( "前门岗亭");
-			station.addElement("stationIP").setText( HardwareUtil.getLocalIP());
-			station.addElement("stationTime").setText( HardwareUtil.formatDateTime(new Date()));
-			
-			for (Device device : deviceList) {
-				Element monitor = rootElement.addElement("monitor");;
+			station.addElement("password").setText("123456");
+			station.addElement("stationName").setText(cs.getStationName());
+			station.addElement("stationIP").setText(HardwareUtil.getLocalIP());
+			station.addElement("stationTime").setText(HardwareUtil.formatDateTime(new Date()));
+
+			for (Device device : cs.getDeviceList()) {
+				Element monitor = rootElement.addElement("monitor");
 				Element deviceElement = monitor.addElement("device");
 				deviceElement.addElement("deviceName").setText(device.getName());
-				deviceElement.addElement("deviceInOutType").setText(device.getType().equals("进口") == true ? "in":"out");
-				deviceElement.addElement("deviceDisplayAndVoiceInside").setText("false");
-				deviceElement.addElement("deviceDisplayAndVoiceOutside").setText("true");
-				deviceElement.addElement("deviceDisplaySupportChinese").setText("true");
+				deviceElement.addElement("deviceInOutType").setText(device.getType().equals("进口") == true ? "in" : "out");
+				deviceElement.addElement("deviceDisplayAndVoiceInside").setText(device.getSupportInsideVoice().equals("支持") == true ? "true" : "false");
+				deviceElement.addElement("deviceDisplayAndVoiceOutside").setText(device.getSupportOutsideVoice().equals("支持") == true ? "true" : "false");
+				deviceElement.addElement("deviceDisplaySupportChinese").setText(device.getSupportChinese().equals("支持") == true ? "true" : "false");
 			}
-			
-			HardwareUtil.writeMsg(session, dom.getRootElement().asXML());
+			WebMessage wm = new WebMessage(WebMessageType.设备信息, dom.getRootElement().asXML());
+			HardwareUtil.writeMsg(session, wm.toString());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -156,55 +140,67 @@ public static void sendDeviceInfo(IoSession session,List<Device> deviceList) {
 
 	public static void writeMsg(IoSession ioSession, String msg) {
 		try {
-			ioSession.write(encode(msg));
+			ioSession.write(msg);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
 	public static String decode(String msg) {
-		try{
-			int indexOf = msg.indexOf(">")+1;
-			String subStr = msg.substring(indexOf, msg.length()-16);
-			
+		try {
+			int indexOf = msg.indexOf(">") + 1;
+			String subStr = msg.substring(indexOf, msg.length() - 16);
+
 			String decrypt = RSAUtils.decrypt(subStr, RSAUtils.getPrivateKey());
 			String replace = msg.replace(subStr, decrypt);
 			return replace;
-		}catch(Exception e){
+		} catch (Exception e) {
 			throw new EncryptException("解密失败", e);
 		}
 	}
 
 	public static String encode(String msg) {
-		try{
-			int indexOf = msg.indexOf(">")+1;
-			String subStr = msg.substring(indexOf, msg.length()-16);
+		try {
+			int indexOf = msg.indexOf(">") + 1;
+			String subStr = msg.substring(indexOf, msg.length() - 16);
 			String encrypt = RSAUtils.encrypt(subStr, RSAUtils.getPublicKey(he_publicKey));
-			String replace = msg.replace(subStr,encrypt);
+			String replace = msg.replace(subStr, encrypt);
 			return replace;
-		}catch(Exception e){
+		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
 	}
-	
+
 	public static void changeDecretKey(IoSession ioSession) {
-		try{
+		try {
 			Document document = DocumentHelper.createDocument();
 			Element dongluCarpark = document.addElement("dongluCarpark");
 			dongluCarpark.addAttribute("type", "publicKey");
 			Element publicKey = dongluCarpark.addElement("publicKey");
 			publicKey.setText(RSAUtils.getPublicKeyString());
 			ioSession.write(document.getRootElement().asXML());
-		}catch(Exception e){
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	
-	public static void controlSpeed(long start, long speed){
-        long used = Math.abs(start - System.currentTimeMillis());
-        if(used < speed){
-            Uninterruptibles.sleepUninterruptibly(speed - used, TimeUnit.MILLISECONDS);
-        }
-    }
+
+	public static void controlSpeed(long start, long speed) {
+		long used = Math.abs(start - System.currentTimeMillis());
+		if (used < speed) {
+			Uninterruptibles.sleepUninterruptibly(speed - used, TimeUnit.MILLISECONDS);
+		}
+	}
+
+	public static void responseResult(IoSession session, Document dom) {
+		try {
+			Element rootElement = dom.getRootElement();
+			Element element = rootElement.element("session_id");
+			if (element.getText() != null) {
+				session_id = element.getText();
+			}
+		} catch (Exception e) {
+
+		}
+	}
 }
