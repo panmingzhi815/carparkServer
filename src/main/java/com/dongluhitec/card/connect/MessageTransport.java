@@ -19,8 +19,11 @@ import org.apache.mina.transport.serial.SerialAddress.StopBits;
 import org.apache.mina.transport.serial.SerialConnector;
 import org.apache.mina.transport.socket.nio.NioSocketConnector;
 
+import com.dongluhitec.card.connect.body.ScreenVoiceDoorBody;
+import com.dongluhitec.card.connect.body.VoiceBody;
 import com.dongluhitec.card.connect.exception.DongluHWException;
 import com.dongluhitec.card.connect.filterChain.MessageFactory;
+import com.dongluhitec.card.connect.util.ByteUtils;
 
 public class MessageTransport {
 	public static enum TransportType {
@@ -48,7 +51,6 @@ public class MessageTransport {
 			} else {
 				ioConnector = new NioSocketConnector();
 			}
-			ioConnector.getFilterChain().addLast("logger", new LoggingFilter());
 			ioConnector.getFilterChain().addLast("codec", new ProtocolCodecFilter(new MessageFactory(MessageTypeEnum.停车场)));
 			ioConnector.setHandler(new MessageHandler());
 			ioConnector.setConnectTimeoutMillis(1000);
@@ -97,7 +99,9 @@ public class MessageTransport {
 			if(!awaitUninterruptibly2){
 				throw new DongluHWException("发送消息超时");
 			}
-
+			if(message.getBody() instanceof ScreenVoiceDoorBody){				
+				System.out.println("发送消息"+ByteUtils.byteArrayToHexString(message.toBytes()));
+			}
 			session.getConfig().setUseReadOperation(true);
 			ReadFuture read = session.read();
 			boolean awaitUninterruptibly = read.awaitUninterruptibly(100);
@@ -105,6 +109,9 @@ public class MessageTransport {
 				throw new DongluHWException("等待消息超时");
 			}
 			Message<?> readMsg = (Message<?>) read.getMessage();
+			if(readMsg.getBody() instanceof ScreenVoiceDoorBody){				
+				System.out.println("接收消息"+ByteUtils.byteArrayToHexString(readMsg.toBytes()));
+			}
 			session.getConfig().setUseReadOperation(false);
 			
 			return readMsg;

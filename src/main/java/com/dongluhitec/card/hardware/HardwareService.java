@@ -2,6 +2,7 @@ package com.dongluhitec.card.hardware;
 
 import java.awt.TrayIcon.MessageType;
 import java.net.InetSocketAddress;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -12,11 +13,14 @@ import org.apache.mina.core.service.IoHandlerAdapter;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.codec.serialization.ObjectSerializationCodecFactory;
+import org.apache.mina.filter.codec.textline.TextLineCodecFactory;
 import org.apache.mina.filter.logging.LoggingFilter;
 import org.apache.mina.transport.socket.nio.NioSocketConnector;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.dongluhitec.card.CommonUI;
 import com.dongluhitec.card.connect.body.OpenDoorEnum;
@@ -31,7 +35,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.Uninterruptibles;
 
 public class HardwareService {
-	
+	private Logger LOGGER = LoggerFactory.getLogger(HardwareService.class);
 	public static HardwareService service = null;
 	private static MessageService messageService = null;
 	private ConnectFuture cf = null;
@@ -66,6 +70,7 @@ public class HardwareService {
 				try{
 					List<Device> deviceList = cs.getDeviceList();
 					for (Device device : deviceList) {
+						LOGGER.debug("开始轮询设备:{}",device.getName());
 						long start = System.currentTimeMillis();
 						try{
 							ListenableFuture<CarparkNowRecord> carparkReadNowRecord = messageService.carparkReadNowRecord(device);
@@ -77,7 +82,7 @@ public class HardwareService {
 						}catch(Exception e){
 							EventBusUtil.post(new EventInfo(EventType.硬件通讯异常, "当前主机与停车场硬件设备通讯时发生异常,请检查"));
 						}finally{
-							HardwareUtil.controlSpeed(start, 100);
+							HardwareUtil.controlSpeed(start, 3000);
 						}
 					}
 				}catch(Exception e){}
@@ -91,7 +96,7 @@ public class HardwareService {
 
 			connector.getFilterChain().addLast("logger", new LoggingFilter());
 			//指定编码过滤器 
-			connector.getFilterChain().addLast( "codec", new ProtocolCodecFilter(new ObjectSerializationCodecFactory()));
+			connector.getFilterChain().addLast("codec", new ProtocolCodecFilter(new TextLineCodecFactory(Charset.forName("UTF-8"))));
 			connector.setHandler(new AcceptorMessageHandler());
 			// Set connect timeout.
 			connector.setConnectTimeoutCheckInterval(30);
@@ -124,11 +129,11 @@ public class HardwareService {
 					
 				}catch(Exception e){
 					cf = connector.connect(new InetSocketAddress(cs.getIp(), Integer.parseInt(cs.getPort())));
-					cf.awaitUninterruptibly(5,TimeUnit.SECONDS);
+					cf.awaitUninterruptibly(500,TimeUnit.MILLISECONDS);
 					EventBusUtil.post(new EventInfo(EventType.外接服务通讯异常, "当前主机与对接服务通讯失败,3秒后会自动重联"));
 				}
 			}
-		},5000,1000);
+		},5000,100);
 	}
 		
 	class AcceptorMessageHandler extends IoHandlerAdapter {
@@ -178,6 +183,7 @@ public class HardwareService {
 							if(device == null){
 								return;
 							}
+							Uninterruptibles.sleepUninterruptibly(200, TimeUnit.MILLISECONDS);
 							if(InsideScreen.equals("true")){
 								int voice = Insidevoice.equals("false")==true ? 1 : 10;
 								messageService.carparkScreenVoiceDoor(device, 1, voice, 0, 0, InsideScreenAndVoiceData);
@@ -190,6 +196,7 @@ public class HardwareService {
 							}
 							if(!gate.equals("false")){							
 								messageService.carparkOpenDoor(device, OpenDoorEnum.parse(OpenDoorEnum.parse(gate)));
+								Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
 							}
 							
 							HardwareUtil.responseDeviceControl(session,dom);		

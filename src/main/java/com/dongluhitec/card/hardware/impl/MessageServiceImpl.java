@@ -95,7 +95,6 @@ public class MessageServiceImpl implements MessageService {
 	public ListenableFuture<Boolean> carparkScreenVoiceDoor(final Device device,final int screenID,final int voice,final int font,final int door,final String text){
 		LOGGER.debug("carpark's screen and voice and door for :{}" , device);
 		final Message<?> msg = MessageUtil.createScreenVoiceDoorMsg(device,screenID,voice,font,door,text);
-		
 		ListenableFuture<Boolean> submit = listeningDecorator.submit(new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
