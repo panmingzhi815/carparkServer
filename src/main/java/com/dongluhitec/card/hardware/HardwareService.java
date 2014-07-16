@@ -77,12 +77,13 @@ public class HardwareService {
 							CarparkNowRecord carparkNowRecord = carparkReadNowRecord.get();
 							if(carparkNowRecord != null){
 								HardwareUtil.sendCardNO(cf.getSession(), carparkNowRecord.getCardID(),carparkNowRecord.getReaderID()+"", device.getName());
+								HardwareUtil.controlSpeed(start, 2000);
 							}
 							EventBusUtil.post(new EventInfo(EventType.硬件通讯正常, "硬件通讯恢复正常"));
 						}catch(Exception e){
 							EventBusUtil.post(new EventInfo(EventType.硬件通讯异常, "当前主机与停车场硬件设备通讯时发生异常,请检查"));
 						}finally{
-							HardwareUtil.controlSpeed(start, 3000);
+							HardwareUtil.controlSpeed(start, 300);
 						}
 					}
 				}catch(Exception e){}
@@ -96,7 +97,10 @@ public class HardwareService {
 
 			connector.getFilterChain().addLast("logger", new LoggingFilter());
 			//指定编码过滤器 
-			connector.getFilterChain().addLast("codec", new ProtocolCodecFilter(new TextLineCodecFactory(Charset.forName("UTF-8"))));
+			TextLineCodecFactory lineCodec=new TextLineCodecFactory(Charset.forName("UTF-8"));
+			lineCodec.setDecoderMaxLineLength(1024*1024); //1M  
+			lineCodec.setEncoderMaxLineLength(1024*1024); //1M  
+			connector.getFilterChain().addLast("codec",new ProtocolCodecFilter(lineCodec));  //行文本解析   
 			connector.setHandler(new AcceptorMessageHandler());
 			// Set connect timeout.
 			connector.setConnectTimeoutCheckInterval(30);
@@ -183,22 +187,25 @@ public class HardwareService {
 							if(device == null){
 								return;
 							}
-							Uninterruptibles.sleepUninterruptibly(200, TimeUnit.MILLISECONDS);
 							if(InsideScreen.equals("true")){
-								int voice = Insidevoice.equals("false")==true ? 1 : 10;
-								messageService.carparkScreenVoiceDoor(device, 1, voice, 0, 0, InsideScreenAndVoiceData);
-								Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
+								int voice = Insidevoice.equals("false")==true ? 1 : 9;
+								ListenableFuture<Boolean> carparkScreenVoiceDoor = messageService.carparkScreenVoiceDoor(device, 1, voice, 0, OpenDoorEnum.parse(gate), InsideScreenAndVoiceData);
+								Boolean boolean1 = carparkScreenVoiceDoor.get();
+								if(boolean1 == null){
+									carparkScreenVoiceDoor = messageService.carparkScreenVoiceDoor(device, 1, voice, 0, OpenDoorEnum.parse(gate), InsideScreenAndVoiceData);
+									carparkScreenVoiceDoor.get();
+								}
+								gate = "false";
 							}
 							if(OutsideScreen.equals("true")){
-								int voice = Outsidevoice.equals("false")==true ? 1 : 10;
-								messageService.carparkScreenVoiceDoor(device, 2, voice, 0, 0, OutsideScreenAndVoiceData);
-								Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
+								int voice = Outsidevoice.equals("false")==true ? 1 : 9;
+								ListenableFuture<Boolean> carparkScreenVoiceDoor = messageService.carparkScreenVoiceDoor(device, 2, voice, 0, OpenDoorEnum.parse(gate), OutsideScreenAndVoiceData);
+								Boolean boolean1 = carparkScreenVoiceDoor.get();
+								if(boolean1 == null){
+									carparkScreenVoiceDoor = messageService.carparkScreenVoiceDoor(device, 2, voice, 0, OpenDoorEnum.parse(gate), OutsideScreenAndVoiceData);
+									carparkScreenVoiceDoor.get();
+								}
 							}
-							if(!gate.equals("false")){							
-								messageService.carparkOpenDoor(device, OpenDoorEnum.parse(OpenDoorEnum.parse(gate)));
-								Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
-							}
-							
 							HardwareUtil.responseDeviceControl(session,dom);		
 						}catch(Exception e){
 							

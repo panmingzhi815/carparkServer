@@ -27,7 +27,7 @@ public class MessageServiceImpl implements MessageService {
 	
 	private Logger LOGGER = LoggerFactory.getLogger(MessageServiceImpl.class);
 	private static Map<String,MessageTransport> transportMap = new HashMap<String,MessageTransport>();
-	private static ListeningExecutorService listeningDecorator = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
+	private static ListeningExecutorService listeningDecorator = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
 	
 	public MessageTransport getMessageTransport(Device device){
 		String key = device.getAddress();

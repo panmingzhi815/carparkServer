@@ -25,12 +25,15 @@ public enum OpenDoorEnum {
 	}
 	
 	public static int parse(String chars){
-		if(chars.equals("up")){
+		switch (chars) {
+		case "up":
 			return 1;
-		}else if(chars.equals("down")){
+		case "down":
 			return 2;
-		}else{
+		case "stop":
 			return 3;
+		default:
+			return 0;
 		}
 	}
 }
