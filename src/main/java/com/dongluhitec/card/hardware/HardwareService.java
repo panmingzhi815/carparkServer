@@ -1,6 +1,5 @@
 package com.dongluhitec.card.hardware;
 
-import java.awt.TrayIcon.MessageType;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.util.List;
@@ -10,11 +9,12 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.mina.core.future.ConnectFuture;
 import org.apache.mina.core.service.IoHandlerAdapter;
+import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
-import org.apache.mina.filter.codec.serialization.ObjectSerializationCodecFactory;
 import org.apache.mina.filter.codec.textline.TextLineCodecFactory;
 import org.apache.mina.filter.logging.LoggingFilter;
+import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
 import org.apache.mina.transport.socket.nio.NioSocketConnector;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
@@ -32,7 +32,6 @@ import com.dongluhitec.card.util.EventBusUtil;
 import com.dongluhitec.card.util.EventInfo;
 import com.dongluhitec.card.util.EventInfo.EventType;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.Uninterruptibles;
 
 public class HardwareService {
 	private Logger LOGGER = LoggerFactory.getLogger(HardwareService.class);
@@ -42,6 +41,10 @@ public class HardwareService {
 	private NioSocketConnector connector;
 	private static CarparkSetting cs;
 	private final long checkConnectorSecond = 3;
+	private NioSocketAcceptor acceptor;
+	private final int PORT = 9124;
+	
+	private static boolean isPlayVoice = false;
 	
 	private HardwareService(){};
 	
@@ -62,6 +65,26 @@ public class HardwareService {
 		startLogging();
 	}
 	
+	private void startListne(){
+		try {
+			acceptor = new NioSocketAcceptor();
+
+			acceptor.getFilterChain().addLast("logger", new LoggingFilter());
+			//指定编码过滤器 
+			TextLineCodecFactory lineCodec=new TextLineCodecFactory(Charset.forName("UTF-8"));
+			lineCodec.setDecoderMaxLineLength(1024*1024); //1M  
+			lineCodec.setEncoderMaxLineLength(1024*1024); //1M  
+			acceptor.getFilterChain().addLast("codec",new ProtocolCodecFilter(lineCodec));  //行文本解析   
+			acceptor.setHandler(new AcceptorMessageHandler());
+			
+			acceptor.bind(new InetSocketAddress(PORT));
+			LOGGER.info("监听服务开始，端口：：",PORT);
+		} catch (Exception e) {
+			e.printStackTrace();
+			CommonUI.error("错误", "开始监听服务器失败!");
+		}
+	}
+	
 	private void startLogging(){
 		Timer timer = new Timer("check web connector");
 		timer.schedule(new TimerTask() {
@@ -73,17 +96,21 @@ public class HardwareService {
 						LOGGER.debug("开始轮询设备:{}",device.getName());
 						long start = System.currentTimeMillis();
 						try{
+							if(isPlayVoice == true){
+								HardwareUtil.controlSpeed(start, 300);
+								isPlayVoice = false;
+							}
 							ListenableFuture<CarparkNowRecord> carparkReadNowRecord = messageService.carparkReadNowRecord(device);
 							CarparkNowRecord carparkNowRecord = carparkReadNowRecord.get();
 							if(carparkNowRecord != null){
 								HardwareUtil.sendCardNO(cf.getSession(), carparkNowRecord.getCardID(),carparkNowRecord.getReaderID()+"", device.getName());
-								HardwareUtil.controlSpeed(start, 2000);
+								HardwareUtil.controlSpeed(start, 3000);
 							}
 							EventBusUtil.post(new EventInfo(EventType.硬件通讯正常, "硬件通讯恢复正常"));
 						}catch(Exception e){
 							EventBusUtil.post(new EventInfo(EventType.硬件通讯异常, "当前主机与停车场硬件设备通讯时发生异常,请检查"));
 						}finally{
-							HardwareUtil.controlSpeed(start, 300);
+							HardwareUtil.controlSpeed(start, 400);
 						}
 					}
 				}catch(Exception e){}
@@ -171,6 +198,7 @@ public class HardwareService {
 					@Override
 					public void run() {
 						try{
+							isPlayVoice = true;
 							Element controlElement = rootElement.element("control");
 							Element element = rootElement.element("device");
 							
@@ -208,7 +236,7 @@ public class HardwareService {
 							}
 							HardwareUtil.responseDeviceControl(session,dom);		
 						}catch(Exception e){
-							
+							e.printStackTrace();
 						}
 					}
 				}).start();
