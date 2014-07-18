@@ -104,7 +104,7 @@ public class MessageTransport {
 			}
 			session.getConfig().setUseReadOperation(true);
 			ReadFuture read = session.read();
-			boolean awaitUninterruptibly = read.awaitUninterruptibly(100);
+			boolean awaitUninterruptibly = read.awaitUninterruptibly(300);
 			if(!awaitUninterruptibly){
 				throw new DongluHWException("等待消息超时");
 			}

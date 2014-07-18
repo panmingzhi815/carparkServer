@@ -63,6 +63,7 @@ public class HardwareService {
 		}
 		startWebConnector();
 		startLogging();
+		startListne();
 	}
 	
 	private void startListne(){
@@ -75,10 +76,10 @@ public class HardwareService {
 			lineCodec.setDecoderMaxLineLength(1024*1024); //1M  
 			lineCodec.setEncoderMaxLineLength(1024*1024); //1M  
 			acceptor.getFilterChain().addLast("codec",new ProtocolCodecFilter(lineCodec));  //行文本解析   
-			acceptor.setHandler(new AcceptorMessageHandler());
+			acceptor.setHandler(new listenHandler());
 			
 			acceptor.bind(new InetSocketAddress(PORT));
-			LOGGER.info("监听服务开始，端口：：",PORT);
+			LOGGER.info("监听服务开始，端口：{}",PORT);
 		} catch (Exception e) {
 			e.printStackTrace();
 			CommonUI.error("错误", "开始监听服务器失败!");
@@ -141,6 +142,7 @@ public class HardwareService {
 		}
 	}
 	
+	private boolean isSendDevice = false;
 	private void checkWebConnector(){
 		Timer timer = new Timer("check web connector");
 		timer.schedule(new TimerTask() {
@@ -149,22 +151,114 @@ public class HardwareService {
 				try{
 					if(cf.getSession().isConnected()){
 						EventBusUtil.post(new EventInfo(EventType.外接服务通讯正常, "外接服务通讯恢复正常"));
+						if(isSendDevice == false){
+							HardwareUtil.sendDeviceInfo(cf.getSession(), cs);
+							isSendDevice = true;
+						}
 						return;
 					}
 					cf = connector.connect(new InetSocketAddress(cs.getIp(), Integer.parseInt(cs.getPort())));
 					boolean awaitUninterruptibly = cf.awaitUninterruptibly(5,TimeUnit.SECONDS);
 					if(!awaitUninterruptibly){
 						EventBusUtil.post(new EventInfo(EventType.外接服务通讯异常, "当前主机与对接服务通讯失败,3秒后会自动重联"));
+						isSendDevice = false;
 						return;
 					}
 					
 				}catch(Exception e){
+					isSendDevice = false;
 					cf = connector.connect(new InetSocketAddress(cs.getIp(), Integer.parseInt(cs.getPort())));
 					cf.awaitUninterruptibly(500,TimeUnit.MILLISECONDS);
 					EventBusUtil.post(new EventInfo(EventType.外接服务通讯异常, "当前主机与对接服务通讯失败,3秒后会自动重联"));
 				}
 			}
 		},5000,100);
+	}
+	
+	class listenHandler extends IoHandlerAdapter{
+
+		@Override
+		public void messageReceived(final IoSession session, Object message) throws Exception {
+			String checkSubpackage = HardwareUtil.checkSubpackage(session, message);
+			if(checkSubpackage == null){
+				return;
+			}
+			
+			WebMessage wm = new WebMessage(checkSubpackage);
+			
+			final Document dom = DocumentHelper.parseText(wm.getContent());
+			final Element rootElement = dom.getRootElement();
+			
+			if(wm.getType() == WebMessageType.成功){
+				HardwareUtil.responseResult(session,dom);
+			}
+			
+			if(wm.getType() == WebMessageType.设备控制){
+				new Thread(new Runnable() {
+					@Override
+					public void run() {
+						try{
+							isPlayVoice = true;
+							Element controlElement = rootElement.element("control");
+							Element element = rootElement.element("device");
+							
+							String deviceName = element.element("deviceName").getTextTrim();
+							String gate = controlElement.element("gate").getTextTrim();
+							String Insidevoice,Outsidevoice,InsideScreen,OutsideScreen,InsideScreenAndVoiceData,OutsideScreenAndVoiceData;
+							if(controlElement.element("insideVoice") == null){
+								Insidevoice = controlElement.element("InsideVoice").getTextTrim();
+								Outsidevoice = controlElement.element("OutsideVoice").getTextTrim();
+								InsideScreen = controlElement.element("InsideScreen").getTextTrim();
+								OutsideScreen = controlElement.element("OutsideScreen").getTextTrim();
+								InsideScreenAndVoiceData = controlElement.element("InsideScreenAndVoiceData").getTextTrim();
+								OutsideScreenAndVoiceData = controlElement.element("OutsideScreenAndVoiceData").getTextTrim();
+							}else{
+								Insidevoice = controlElement.element("insideVoice").getTextTrim();
+								Outsidevoice = controlElement.element("outsideVoice").getTextTrim();
+								InsideScreen = controlElement.element("insideScreen").getTextTrim();
+								OutsideScreen = controlElement.element("outsideScreen").getTextTrim();
+								InsideScreenAndVoiceData = controlElement.element("insideScreenAndVoiceData").getTextTrim();
+								OutsideScreenAndVoiceData = controlElement.element("outsideScreenAndVoiceData").getTextTrim();
+							}
+							
+							Device device = cs.getDeviceByName(deviceName);
+							if(device == null){
+								return;
+							}
+							if(InsideScreen.equals("true")){
+								int voice = Insidevoice.equals("false")==true ? 1 : 9;
+								ListenableFuture<Boolean> carparkScreenVoiceDoor = messageService.carparkScreenVoiceDoor(device, 1, voice, 0, OpenDoorEnum.parse(gate), InsideScreenAndVoiceData);
+								Boolean boolean1 = carparkScreenVoiceDoor.get();
+								if(boolean1 == null){
+									carparkScreenVoiceDoor = messageService.carparkScreenVoiceDoor(device, 1, voice, 0, OpenDoorEnum.parse(gate), InsideScreenAndVoiceData);
+									carparkScreenVoiceDoor.get();
+								}
+								gate = "false";
+							}
+							if(OutsideScreen.equals("true")){
+								int voice = Outsidevoice.equals("false")==true ? 1 : 9;
+								ListenableFuture<Boolean> carparkScreenVoiceDoor = messageService.carparkScreenVoiceDoor(device, 2, voice, 0, OpenDoorEnum.parse(gate), OutsideScreenAndVoiceData);
+								Boolean boolean1 = carparkScreenVoiceDoor.get();
+								if(boolean1 == null){
+									carparkScreenVoiceDoor = messageService.carparkScreenVoiceDoor(device, 2, voice, 0, OpenDoorEnum.parse(gate), OutsideScreenAndVoiceData);
+									carparkScreenVoiceDoor.get();
+								}
+							}
+							HardwareUtil.responseDeviceControl(session,dom);		
+						}catch(Exception e){
+							e.printStackTrace();
+						}
+					}
+				}).start();
+			}
+		}
+
+		@Override
+		public void messageSent(IoSession session, Object message) throws Exception {
+			// TODO Auto-generated method stub
+			super.messageSent(session, message);
+		}
+		
 	}
 		
 	class AcceptorMessageHandler extends IoHandlerAdapter {
@@ -173,7 +267,6 @@ public class HardwareService {
 		@Override
 		public void sessionCreated(IoSession session) throws Exception {
 			super.sessionCreated(session);
-			HardwareUtil.sendDeviceInfo(session, cs);
 		}
 
 		@Override
@@ -204,12 +297,23 @@ public class HardwareService {
 							
 							String deviceName = element.element("deviceName").getTextTrim();
 							String gate = controlElement.element("gate").getTextTrim();
-							String Insidevoice = controlElement.element("insideVoice").getTextTrim();
-							String Outsidevoice = controlElement.element("outsideVoice").getTextTrim();
-							String InsideScreen = controlElement.element("insideScreen").getTextTrim();
-							String OutsideScreen = controlElement.element("outsideScreen").getTextTrim();
-							String InsideScreenAndVoiceData = controlElement.element("insideScreenAndVoiceData").getTextTrim();
-							String OutsideScreenAndVoiceData = controlElement.element("outsideScreenAndVoiceData").getTextTrim();
+
+							String Insidevoice,Outsidevoice,InsideScreen,OutsideScreen,InsideScreenAndVoiceData,OutsideScreenAndVoiceData;
+							if(controlElement.element("insideVoice") == null){
+								Insidevoice = controlElement.element("Insidevoice").getTextTrim();
+								Outsidevoice = controlElement.element("Outsidevoice").getTextTrim();
+								InsideScreen = controlElement.element("InsideScreen").getTextTrim();
+								OutsideScreen = controlElement.element("OutsideScreen").getTextTrim();
+								InsideScreenAndVoiceData = controlElement.element("InsideScreenAndVoiceData").getTextTrim();
+								OutsideScreenAndVoiceData = controlElement.element("OutsideScreenAndVoiceData").getTextTrim();
+							}else{
+								Insidevoice = controlElement.element("insideVoice").getTextTrim();
+								Outsidevoice = controlElement.element("outsideVoice").getTextTrim();
+								InsideScreen = controlElement.element("insideScreen").getTextTrim();
+								OutsideScreen = controlElement.element("outsideScreen").getTextTrim();
+								InsideScreenAndVoiceData = controlElement.element("insideScreenAndVoiceData").getTextTrim();
+								OutsideScreenAndVoiceData = controlElement.element("outsideScreenAndVoiceData").getTextTrim();
+							}
 							
 							Device device = cs.getDeviceByName(deviceName);
 							if(device == null){
@@ -258,7 +362,7 @@ public class HardwareService {
 		@Override
 		public void exceptionCaught(IoSession session, Throwable cause)
 				throws Exception {
-			super.exceptionCaught(session, cause);
+			cause.printStackTrace();
 		}
 
 	}
