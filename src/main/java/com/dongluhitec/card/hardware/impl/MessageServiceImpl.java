@@ -1,5 +1,6 @@
 package com.dongluhitec.card.hardware.impl;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -108,5 +109,18 @@ public class MessageServiceImpl implements MessageService {
 			}
 		});
 		return submit;
+	}
+	
+	@Override
+	public void setDateTime(final Device device,final Date date){
+		LOGGER.debug("carpark's set date :{} for :{}" ,date, device);
+		final Message<?> msg = MessageUtil.createSetDateTime(device, date);
+		listeningDecorator.submit(new Runnable() {
+			@Override
+			public void run() {
+				MessageTransport messageTransport = getMessageTransport(device);
+				Message<?> sendMessage = messageTransport.sendMessage(msg);
+			}
+		});
 	}
 }

@@ -1,5 +1,7 @@
 package com.dongluhitec.card.hardware;
 
+import java.util.Date;
+
 import com.dongluhitec.card.connect.body.OpenDoorEnum;
 import com.dongluhitec.card.model.CarparkNowRecord;
 import com.dongluhitec.card.model.Device;
@@ -33,5 +35,12 @@ public interface MessageService {
 	 * @return
 	 */
 	ListenableFuture<Boolean> carparkScreenVoiceDoor(Device device, int screenID, int voice, int font, int door, String text);
+
+	/**
+	 * 下发设备时间
+	 * @param device
+	 * @param date
+	 */
+	void setDateTime(Device device, Date date);
 
 }

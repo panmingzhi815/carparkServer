@@ -18,4 +18,5 @@ public class MessageConstance {
     public static final byte Message_ScreenVoiceDoor = (byte)0x03;
     public static final byte Message_ReadNowRecord = (byte) 0X04;
 	public static final byte Message_OpenDoor = (byte)0x05;
+	public static final byte Message_SetTime = (byte) 0XB0;
 }

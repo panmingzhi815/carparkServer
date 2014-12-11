@@ -2,6 +2,7 @@ package com.dongluhitec.card.hardware;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
+import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -62,6 +63,7 @@ public class HardwareService {
 			return;
 		}
 		startWebConnector();
+		checkDateTime();
 		startLogging();
 		startListne();
 	}
@@ -116,7 +118,36 @@ public class HardwareService {
 					}
 				}catch(Exception e){}
 			}
-		},1,100);
+		},5000,100);
+	}
+	
+	private void checkDateTime(){
+		Timer timer = new Timer("check date time");
+		timer.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				try{
+					List<Device> deviceList = cs.getDeviceList();
+					for (Device device : deviceList) {
+						Date date = new Date();
+						LOGGER.debug("开始设置设备{}时间:{}",device.getName(),date);
+						
+						long start = System.currentTimeMillis();
+						try{
+							if(isPlayVoice == true){
+								HardwareUtil.controlSpeed(start, 10000);
+							}
+							messageService.setDateTime(device, date);
+							EventBusUtil.post(new EventInfo(EventType.硬件通讯正常, "硬件通讯恢复正常"));
+						}catch(Exception e){
+							EventBusUtil.post(new EventInfo(EventType.硬件通讯异常, "当前主机与停车场硬件设备通讯时发生异常,请检查"));
+						}finally{
+							HardwareUtil.controlSpeed(start, 400);
+						}
+					}
+				}catch(Exception e){}
+			}
+		},3000,1000*60*30);
 	}
 	
 	private void startWebConnector(){
