@@ -105,15 +105,16 @@ public class CardIDBody implements MessageBody {
 	}
 
 	private String removeLeadingZero(String s) {
-		int firstNoZero = -1;
-		for (int i = 0; i < s.length(); i++) {
-			if (s.charAt(i) != '0') {
-				firstNoZero = i;
-				break;
+		int firstNoZero = 0;
+		for (int i = 0; i < s.length() - 8; i++) {
+			if (s.charAt(i) == '0') {
+				firstNoZero = i+1;
+				continue;
 			}
+			break;
 		}
-		if (firstNoZero==-1)
-			return "";
+		if (firstNoZero == 0)
+			return s;
 		else
 			return s.substring(firstNoZero);
 	}
@@ -154,5 +155,22 @@ public class CardIDBody implements MessageBody {
 			return "卡内码: 无";
 		else
 			return "卡内码: " + this.cardID;
+	}
+	
+	public static void main(String[] args){
+		String s = "";
+		
+		int firstNoZero = 0;
+		for (int i = 0; i < s.length() - 8; i++) {
+			if (s.charAt(i) == '0') {
+				firstNoZero = i+1;
+				continue;
+			}
+			break;
+		}
+		if (firstNoZero == 0)
+			System.out.println(s);
+		else
+			System.out.println(s.substring(firstNoZero));
 	}
 }
