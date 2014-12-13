@@ -56,7 +56,7 @@ public class MessageServiceImpl implements MessageService {
 			@Override
 			public Boolean call() throws Exception {
 				MessageTransport messageTransport = getMessageTransport(device);
-				Message<?> sendMessage = messageTransport.sendMessage(msg);
+				Message<?> sendMessage = messageTransport.sendMessage(msg,1000);
 				if(sendMessage == null){
 					return null;
 				}
@@ -100,7 +100,7 @@ public class MessageServiceImpl implements MessageService {
 			@Override
 			public Boolean call() throws Exception {
 				MessageTransport messageTransport = getMessageTransport(device);
-				Message<?> sendMessage = messageTransport.sendMessage(msg);
+				Message<?> sendMessage = messageTransport.sendMessage(msg,3000);
 				if(sendMessage == null){
 					return null;
 				}
@@ -119,8 +119,29 @@ public class MessageServiceImpl implements MessageService {
 			@Override
 			public void run() {
 				MessageTransport messageTransport = getMessageTransport(device);
-				Message<?> sendMessage = messageTransport.sendMessage(msg);
+				messageTransport.sendMessageNoReturn(msg);
 			}
 		});
 	}
+
+	@Override
+	public ListenableFuture<Boolean> setAD(final Device device, String adStr) {
+		LOGGER.debug("carpark's set ad:{} for:{}" , adStr, device);
+		final Message<?> msg = MessageUtil.creatADScreenMsg(device, adStr);
+		ListenableFuture<Boolean> submit = listeningDecorator.submit(new Callable<Boolean>() {
+			@Override
+			public Boolean call() throws Exception {
+				MessageTransport messageTransport = getMessageTransport(device);
+				Message<?> sendMessage = messageTransport.sendMessage(msg);
+				if(sendMessage == null){
+					return null;
+				}
+				SimpleBody body = (SimpleBody)sendMessage.getBody();
+				return body.getSimpleBody() == 'y';
+			}
+		});
+		return submit;
+	}
+	
+	
 }

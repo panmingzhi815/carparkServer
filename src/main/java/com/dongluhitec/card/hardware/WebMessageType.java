@@ -2,7 +2,7 @@ package com.dongluhitec.card.hardware;
 
 public enum WebMessageType {
 
-	交换密钥("00"),设备信息("01"),发送卡号("02"),设备控制("03"),成功("04");
+	交换密钥("00"),设备信息("01"),发送卡号("02"),设备控制("03"),成功("04"),广告("05");
 	
 	private String code;
 	WebMessageType(String code){

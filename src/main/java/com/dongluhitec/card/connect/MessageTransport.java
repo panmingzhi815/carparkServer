@@ -90,7 +90,7 @@ public class MessageTransport {
 		}
 	}
 
-	public synchronized Message<?> sendMessage(Message<?> message) {
+	public synchronized Message<?> sendMessage(Message<?> message,long waitTime) {
 		try {
 			open();
 
@@ -119,6 +119,10 @@ public class MessageTransport {
 			close();
 		}
 
+	}
+	
+	public synchronized Message<?> sendMessage(Message<?> message) {
+		return sendMessage(message,300);
 	}
 
 	public synchronized void sendMessageNoReturn(Message<?> message) {

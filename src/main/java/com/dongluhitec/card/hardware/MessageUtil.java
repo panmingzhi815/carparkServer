@@ -9,6 +9,7 @@ import com.dongluhitec.card.connect.Message;
 import com.dongluhitec.card.connect.MessageBody;
 import com.dongluhitec.card.connect.MessageConstance;
 import com.dongluhitec.card.connect.MessageHeader;
+import com.dongluhitec.card.connect.body.ADScreenBody;
 import com.dongluhitec.card.connect.body.EmptyBody;
 import com.dongluhitec.card.connect.body.OpenDoorEnum;
 import com.dongluhitec.card.connect.body.ScreenVoiceDoorBody;
@@ -87,6 +88,23 @@ public class MessageUtil {
 		MessageHeader mh = new MessageHeader(serialDeviceAddress,DirectonType.请求,MessageConstance.Message_SetTime,SetDateTimeBody.LENGTH);
 		
 		Message<MessageBody> msg = new Message<MessageBody>(mh, setDateTimeBody);
+		return msg;
+	}
+	
+	public static Message<?> creatADScreenMsg(Device device, String adStr) {
+		String key = new StringBuffer().append(device.toString()).append(adStr).toString();
+		Message<MessageBody> message = commandMap.get(key);
+		if(message != null){
+			return message;
+		}
+		ADScreenBody adsb = new ADScreenBody();
+		adsb.setText(adStr);
+
+		SerialDeviceAddress serialDeviceAddress = new SerialDeviceAddress();
+		serialDeviceAddress.setAddress(device.getArea());
+		MessageHeader mh = new MessageHeader(serialDeviceAddress,DirectonType.请求,MessageConstance.Message_AD,ADScreenBody.LENGTH);
+		
+		Message<MessageBody> msg = new Message<MessageBody>(mh, adsb);
 		return msg;
 	}
 

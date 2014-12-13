@@ -6,6 +6,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.mina.core.future.ConnectFuture;
@@ -43,6 +45,7 @@ public class HardwareService {
 	private static CarparkSetting cs;
 	private final long checkConnectorSecond = 3;
 	private NioSocketAcceptor acceptor;
+	private ExecutorService newSingleThreadExecutor;
 	private final int PORT = 9124;
 	
 	private static boolean isPlayVoice = false;
@@ -61,6 +64,9 @@ public class HardwareService {
 	public void start(){
 		if(cs == null){
 			return;
+		}
+		if(newSingleThreadExecutor == null){
+			newSingleThreadExecutor = Executors.newSingleThreadExecutor();
 		}
 		startWebConnector();
 		checkDateTime();
@@ -160,7 +166,7 @@ public class HardwareService {
 			lineCodec.setDecoderMaxLineLength(1024*1024); //1M  
 			lineCodec.setEncoderMaxLineLength(1024*1024); //1M  
 			connector.getFilterChain().addLast("codec",new ProtocolCodecFilter(lineCodec));  //行文本解析   
-			connector.setHandler(new AcceptorMessageHandler());
+			connector.setHandler(new listenHandler());
 			// Set connect timeout.
 			connector.setConnectTimeoutCheckInterval(30);
 			// 连结到服务器:
@@ -222,10 +228,34 @@ public class HardwareService {
 			
 			if(wm.getType() == WebMessageType.成功){
 				HardwareUtil.responseResult(session,dom);
+				return;
+			}
+			
+			if(wm.getType() == WebMessageType.广告){
+				newSingleThreadExecutor.submit(new Runnable() {
+					
+					@Override
+					public void run() {
+						try{
+							String deviceName = rootElement.element("device").element("deviceName").getTextTrim();
+							String ad = rootElement.element("ad").getTextTrim();
+							
+							Device device = cs.getDeviceByName(deviceName);
+							ListenableFuture<Boolean> setAD = messageService.setAD(device, ad);
+							setAD.get();
+							
+							HardwareUtil.responseDeviceControl(session,dom);	
+						}catch(Exception e){
+							e.printStackTrace();
+						}
+					}
+				});
+				
 			}
 			
 			if(wm.getType() == WebMessageType.设备控制){
-				new Thread(new Runnable() {
+				newSingleThreadExecutor.submit(new Runnable() {
+					
 					@Override
 					public void run() {
 						try{
@@ -280,7 +310,7 @@ public class HardwareService {
 							e.printStackTrace();
 						}
 					}
-				}).start();
+				});
 			}
 		}
 
@@ -290,112 +320,6 @@ public class HardwareService {
 			super.messageSent(session, message);
 		}
 		
-	}
-		
-	class AcceptorMessageHandler extends IoHandlerAdapter {
-
-		
-		@Override
-		public void sessionCreated(IoSession session) throws Exception {
-			super.sessionCreated(session);
-		}
-
-		@Override
-		public void messageReceived(final IoSession session, Object message)
-				throws Exception {
-			String checkSubpackage = HardwareUtil.checkSubpackage(session, message);
-			if(checkSubpackage == null){
-				return;
-			}
-			
-			WebMessage wm = new WebMessage(checkSubpackage);
-			
-			final Document dom = DocumentHelper.parseText(wm.getContent());
-			final Element rootElement = dom.getRootElement();
-			
-			if(wm.getType() == WebMessageType.成功){
-				HardwareUtil.responseResult(session,dom);
-			}
-			
-			if(wm.getType() == WebMessageType.设备控制){
-				new Thread(new Runnable() {
-					@Override
-					public void run() {
-						try{
-							isPlayVoice = true;
-							Element controlElement = rootElement.element("control");
-							Element element = rootElement.element("device");
-							
-							String deviceName = element.element("deviceName").getTextTrim();
-							String gate = controlElement.element("gate").getTextTrim();
-
-							String Insidevoice,Outsidevoice,InsideScreen,OutsideScreen,InsideScreenAndVoiceData,OutsideScreenAndVoiceData;
-							if(controlElement.element("insideVoice") == null){
-								Insidevoice = controlElement.element("Insidevoice").getTextTrim();
-								Outsidevoice = controlElement.element("Outsidevoice").getTextTrim();
-								InsideScreen = controlElement.element("InsideScreen").getTextTrim();
-								OutsideScreen = controlElement.element("OutsideScreen").getTextTrim();
-								InsideScreenAndVoiceData = controlElement.element("InsideScreenAndVoiceData").getTextTrim();
-								OutsideScreenAndVoiceData = controlElement.element("OutsideScreenAndVoiceData").getTextTrim();
-							}else{
-								Insidevoice = controlElement.element("insideVoice").getTextTrim();
-								Outsidevoice = controlElement.element("outsideVoice").getTextTrim();
-								InsideScreen = controlElement.element("insideScreen").getTextTrim();
-								OutsideScreen = controlElement.element("outsideScreen").getTextTrim();
-								InsideScreenAndVoiceData = controlElement.element("insideScreenAndVoiceData").getTextTrim();
-								OutsideScreenAndVoiceData = controlElement.element("outsideScreenAndVoiceData").getTextTrim();
-							}
-							
-							Device device = cs.getDeviceByName(deviceName);
-							if(device == null){
-								return;
-							}
-							if(InsideScreen.equals("true")){
-								int voice = Insidevoice.equals("false")==true ? 1 : 9;
-								ListenableFuture<Boolean> carparkScreenVoiceDoor = messageService.carparkScreenVoiceDoor(device, 1, voice, 0, OpenDoorEnum.parse(gate), InsideScreenAndVoiceData);
-								Boolean boolean1 = carparkScreenVoiceDoor.get();
-								if(boolean1 == null){
-									carparkScreenVoiceDoor = messageService.carparkScreenVoiceDoor(device, 1, voice, 0, OpenDoorEnum.parse(gate), InsideScreenAndVoiceData);
-									carparkScreenVoiceDoor.get();
-								}
-								gate = "false";
-							}
-							if(OutsideScreen.equals("true")){
-								int voice = Outsidevoice.equals("false")==true ? 1 : 9;
-								ListenableFuture<Boolean> carparkScreenVoiceDoor = messageService.carparkScreenVoiceDoor(device, 2, voice, 0, OpenDoorEnum.parse(gate), OutsideScreenAndVoiceData);
-								Boolean boolean1 = carparkScreenVoiceDoor.get();
-								if(boolean1 == null){
-									carparkScreenVoiceDoor = messageService.carparkScreenVoiceDoor(device, 2, voice, 0, OpenDoorEnum.parse(gate), OutsideScreenAndVoiceData);
-									carparkScreenVoiceDoor.get();
-								}
-							}
-							HardwareUtil.responseDeviceControl(session,dom);		
-						}catch(Exception e){
-							e.printStackTrace();
-						}
-					}
-				}).start();
-			}
-		}
-
-		@Override
-		public void messageSent(IoSession session, Object message)
-				throws Exception {
-			
-			super.messageSent(session, message);
-		}
-
-		@Override
-		public void sessionClosed(IoSession session) throws Exception {
-			super.sessionClosed(session);
-		}
-
-		@Override
-		public void exceptionCaught(IoSession session, Throwable cause)
-				throws Exception {
-			cause.printStackTrace();
-		}
-
 	}
 
 }
