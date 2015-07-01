@@ -20,20 +20,6 @@
 
 	<repositories>
 		<repository>
-			<id>lib</id>
-			<name>lib</name>
-			<releases>
-				<enabled>true</enabled>
-				<checksumPolicy>ignore</checksumPolicy>
-			</releases>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<url>file://${localrepo}</url>
-
-		</repository>
-
-		<repository>
 			<id>swt-repo</id>
 			<url>https://raw.githubusercontent.com/Xianguang-Zhou/swt-maven-repository/master/release/</url>
 		</repository>
