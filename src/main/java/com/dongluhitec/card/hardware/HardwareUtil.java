@@ -235,10 +235,10 @@ public class HardwareUtil {
 			deviceElement.addElement("deviceName").setText(deviceName);
 
 			root.addElement("plateCode").setText(plateNO);
-			root.addElement("plateBigImage").setText(bigImagePath.toUri().getPath());
-			root.addElement("plateSmallImage").setText(smallImagePath.toUri().getPath());
+			root.addElement("plateBigImage").setText(bigImagePath.toUri().getPath().substring(1));
+			root.addElement("plateSmallImage").setText(smallImagePath.toUri().getPath().substring(1));
 
-			WebMessage wm = new WebMessage(WebMessageType.发送卡号, document.getRootElement().asXML());
+			WebMessage wm = new WebMessage(WebMessageType.发送车牌, document.getRootElement().asXML());
 			HardwareUtil.writeMsg(session, wm.toString());
 		} catch (Exception e) {
 			e.printStackTrace();
