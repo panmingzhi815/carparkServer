@@ -79,7 +79,6 @@ public class HardwareService {
 	}
 	
 	private void startPlateMonitor() {
-		CarparkSetting cs = new CarparkSetting();
 		final String plateDeviceip = cs.getPlateDeviceip();
 		final String name = cs.getDeviceList().get(0).getName();
 		if(plateDeviceip != null && !plateDeviceip.trim().isEmpty()){
