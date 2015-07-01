@@ -1,6 +1,12 @@
 package com.dongluhitec.card.hardware;
 
+import java.io.File;
 import java.net.InetAddress;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -26,6 +32,9 @@ public class HardwareUtil {
 	public static String he_publicKey;
 
 	private static String session_id;
+
+	private static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyddMM");
+	private static SimpleDateFormat simpleDateFormat2 = new SimpleDateFormat("yyyyddMMHHmmss");
 
 	public static String checkSubpackage(IoSession session, Object message) {
 		String msg = ((String) message).trim();
@@ -201,6 +210,38 @@ public class HardwareUtil {
 			}
 		} catch (Exception e) {
 
+		}
+	}
+
+	public static void setPlateInfo(IoSession session, String deviceName, String ip, String plateNO, byte[] bigImage, byte[] smallImage) {
+		try {
+			String format = simpleDateFormat.format(new Date());
+			String floder = ip + File.separator + format;
+			Path path = Paths.get(floder);
+			if(Files.notExists(path,LinkOption.NOFOLLOW_LINKS)){
+				Files.createDirectories(path);
+			}
+			
+			Path bigImagePath = Paths.get(floder, simpleDateFormat2.format(new Date())+"_big.jpg");
+			Files.write(bigImagePath, bigImage,StandardOpenOption.CREATE);
+			
+			Path smallImagePath = Paths.get(floder, simpleDateFormat2.format(new Date())+"_small.jpg");
+			Files.write(smallImagePath, smallImage,StandardOpenOption.CREATE);
+			
+			Document document = DocumentHelper.createDocument();
+			Element root = document.addElement("dongluCarpark");
+
+			Element deviceElement = root.addElement("device");
+			deviceElement.addElement("deviceName").setText(deviceName);
+
+			root.addElement("plateCode").setText(plateNO);
+			root.addElement("plateBigImage").setText(bigImagePath.toUri().getPath());
+			root.addElement("plateSmallImage").setText(smallImagePath.toUri().getPath());
+
+			WebMessage wm = new WebMessage(WebMessageType.发送卡号, document.getRootElement().asXML());
+			HardwareUtil.writeMsg(session, wm.toString());
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 }

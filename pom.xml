@@ -14,6 +14,8 @@
 		<commons-io.version>2.1</commons-io.version>
 		<slf4j.version>1.7.7</slf4j.version>
 		<logback.version>1.1.2</logback.version>
+		<jna.version>3.4.0</jna.version>
+        <jna.platform.version>3.4.0</jna.platform.version>
 	</properties>
 
 	<repositories>
@@ -33,7 +35,7 @@
 
 		<repository>
 			<id>swt-repo</id>
-			<url>https://swt-repo.googlecode.com/svn/repo/</url>
+			<url>https://raw.githubusercontent.com/Xianguang-Zhou/swt-maven-repository/master/release/</url>
 		</repository>
 	</repositories>
 
@@ -47,7 +49,7 @@
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-			<version>17.0</version>
+			<version>18.0</version>
 		</dependency>
 
 		<dependency>
@@ -102,11 +104,23 @@
 			<artifactId>rxtx</artifactId>
 			<version>${rxtx.version}</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>net.java.dev.jna</groupId>
+			<artifactId>jna</artifactId>
+			<version>${jna.version}</version>
+		</dependency>
+	
+		<dependency>
+			<groupId>net.java.dev.jna</groupId>
+			<artifactId>platform</artifactId>
+			<version>${jna.platform.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.11</version>
+			<version>4.12</version>
 			<scope>test</scope>
 		</dependency>
 

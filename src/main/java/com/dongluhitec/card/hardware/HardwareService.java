@@ -31,6 +31,8 @@ import com.dongluhitec.card.hardware.impl.MessageServiceImpl;
 import com.dongluhitec.card.model.CarparkNowRecord;
 import com.dongluhitec.card.model.CarparkSetting;
 import com.dongluhitec.card.model.Device;
+import com.dongluhitec.card.plate.XinlutongCallback.XinlutongResult;
+import com.dongluhitec.card.plate.XinlutongJNAImpl;
 import com.dongluhitec.card.util.EventBusUtil;
 import com.dongluhitec.card.util.EventInfo;
 import com.dongluhitec.card.util.EventInfo.EventType;
@@ -47,6 +49,7 @@ public class HardwareService {
 	private NioSocketAcceptor acceptor;
 	private ExecutorService newSingleThreadExecutor;
 	private final int PORT = 9124;
+	private XinlutongResult xlr;
 	
 	private static boolean isPlayVoice = false;
 	
@@ -72,8 +75,26 @@ public class HardwareService {
 		checkDateTime();
 		startLogging();
 		startListne();
+		startPlateMonitor();
 	}
 	
+	private void startPlateMonitor() {
+		CarparkSetting cs = new CarparkSetting();
+		final String plateDeviceip = cs.getPlateDeviceip();
+		final String name = cs.getDeviceList().get(0).getName();
+		if(plateDeviceip != null && !plateDeviceip.trim().isEmpty()){
+			if(xlr == null){
+    			xlr = new XinlutongResult() {
+    				@Override
+    				public void invok(String ip, int channel, String plateNO, byte[] bigImage, byte[] smallImage) {
+    					HardwareUtil.setPlateInfo(cf.getSession(),name,ip,plateNO,bigImage,smallImage);
+    				}
+    			};
+			}
+			new XinlutongJNAImpl().openEx(plateDeviceip, xlr);
+		}
+	}
+
 	private void startListne(){
 		try {
 			acceptor = new NioSocketAcceptor();

@@ -7,6 +7,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.dongluhitec.card.connect.body.OpenDoorEnum;
+import com.dongluhitec.card.hardware.HardwareUtil;
 import com.dongluhitec.card.hardware.MessageService;
 import com.dongluhitec.card.hardware.impl.MessageServiceImpl;
 import com.dongluhitec.card.model.CarparkNowRecord;
@@ -83,6 +84,11 @@ public class MessageServiceTest {
 		} catch (Exception e) {
 
 		}
+	}
+	
+	@Test
+	public void testPlate(){
+		HardwareUtil.setPlateInfo(null, "pan", "123", "sdf", new byte[1], new byte[2]);
 	}
 
 }

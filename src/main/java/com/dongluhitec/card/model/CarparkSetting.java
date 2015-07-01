@@ -12,6 +12,7 @@ public class CarparkSetting implements Serializable{
 	
 	private String ip;
 	private String port;
+	private String plateDeviceip;
 	
 	private String stationName;
 	
@@ -42,6 +43,14 @@ public class CarparkSetting implements Serializable{
 			return "192.168.1.1";
 		}
 		return ip;
+	}
+
+	public String getPlateDeviceip() {
+		return plateDeviceip;
+	}
+
+	public void setPlateDeviceip(String plateDeviceip) {
+		this.plateDeviceip = plateDeviceip;
 	}
 
 	public void setIp(String ip) {
