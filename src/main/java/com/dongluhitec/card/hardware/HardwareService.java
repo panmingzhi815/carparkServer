@@ -52,6 +52,7 @@ public class HardwareService {
 	private XinlutongResult xlr;
 	
 	private static boolean isPlayVoice = false;
+	private XinlutongJNAImpl xinlutongJNAImpl;
 	
 	private HardwareService(){};
 	
@@ -90,7 +91,8 @@ public class HardwareService {
     				}
     			};
 			}
-			new XinlutongJNAImpl().openEx(plateDeviceip, xlr);
+			xinlutongJNAImpl = new XinlutongJNAImpl();
+			xinlutongJNAImpl.openEx(plateDeviceip, xlr);
 		}
 	}
 
