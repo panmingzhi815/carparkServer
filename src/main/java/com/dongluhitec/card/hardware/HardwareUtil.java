@@ -34,7 +34,7 @@ public class HardwareUtil {
 	private static String session_id;
 
 	private static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyddMM");
-	private static SimpleDateFormat simpleDateFormat2 = new SimpleDateFormat("yyyyddMMHHmmsssss");
+	private static SimpleDateFormat simpleDateFormat2 = new SimpleDateFormat("yyyyddMMHHmmss");
 
 	public static String checkSubpackage(IoSession session, Object message) {
 		String msg = ((String) message).trim();
@@ -222,10 +222,10 @@ public class HardwareUtil {
 				Files.createDirectories(path);
 			}
 			
-			Path bigImagePath = Paths.get(floder, simpleDateFormat2.format(new Date())+"_big.jpg");
+			Path bigImagePath = Paths.get(floder, simpleDateFormat2.format(new Date())+"_"+plateNO+"_big.jpg");
 			Files.write(bigImagePath, bigImage,StandardOpenOption.CREATE);
 			
-			Path smallImagePath = Paths.get(floder, simpleDateFormat2.format(new Date())+"_small.jpg");
+			Path smallImagePath = Paths.get(floder, simpleDateFormat2.format(new Date())+"_"+plateNO+"_small.jpg");
 			Files.write(smallImagePath, smallImage,StandardOpenOption.CREATE);
 			
 			Document document = DocumentHelper.createDocument();
