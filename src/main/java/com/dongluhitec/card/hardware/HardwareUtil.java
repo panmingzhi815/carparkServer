@@ -34,7 +34,7 @@ public class HardwareUtil {
 	private static String session_id;
 
 	private static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyddMM");
-	private static SimpleDateFormat simpleDateFormat2 = new SimpleDateFormat("yyyyddMMHHmmss");
+	private static SimpleDateFormat simpleDateFormat2 = new SimpleDateFormat("yyyyddMMHHmmsssss");
 
 	public static String checkSubpackage(IoSession session, Object message) {
 		String msg = ((String) message).trim();
@@ -235,8 +235,8 @@ public class HardwareUtil {
 			deviceElement.addElement("deviceName").setText(deviceName);
 
 			root.addElement("plateCode").setText(plateNO);
-			root.addElement("plateBigImage").setText(bigImagePath.toUri().getPath().substring(1));
-			root.addElement("plateSmallImage").setText(smallImagePath.toUri().getPath().substring(1));
+			root.addElement("plateBigImage").setText(bigImagePath.toFile().getAbsolutePath());
+			root.addElement("plateSmallImage").setText(smallImagePath.toFile().getAbsolutePath());
 
 			WebMessage wm = new WebMessage(WebMessageType.发送车牌, document.getRootElement().asXML());
 			HardwareUtil.writeMsg(session, wm.toString());

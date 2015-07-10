@@ -316,7 +316,6 @@ public class HardwareService {
 									carparkScreenVoiceDoor = messageService.carparkScreenVoiceDoor(device, 1, voice, 0, OpenDoorEnum.parse(gate), InsideScreenAndVoiceData);
 									carparkScreenVoiceDoor.get();
 								}
-								gate = "false";
 							}
 							if(OutsideScreen.equals("true")){
 								int voice = Outsidevoice.equals("false")==true ? 1 : 9;
