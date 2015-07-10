@@ -231,7 +231,7 @@ public class HardwareService {
 					EventBusUtil.post(new EventInfo(EventType.外接服务通讯异常, "当前主机与对接服务通讯失败,3秒后会自动重联"));
 				}
 			}
-		},5000,100);
+		},5000,2000);
 	}
 	
 	class listenHandler extends IoHandlerAdapter{
