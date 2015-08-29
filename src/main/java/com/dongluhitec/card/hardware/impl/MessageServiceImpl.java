@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 
+import com.dongluhitec.card.connect.body.ProductIDBody;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -142,6 +143,23 @@ public class MessageServiceImpl implements MessageService {
 		});
 		return submit;
 	}
-	
-	
+
+	@Override
+	public ListenableFuture<String> readVersion(final Device device) {
+		LOGGER.debug("carpark's read version for:{}" , device);
+		final Message<?> msg = MessageUtil.creatVersionMsg(device);
+		ListenableFuture<String> submit = listeningDecorator.submit(new Callable<String>() {
+			@Override
+			public String call() throws Exception {
+				MessageTransport messageTransport = getMessageTransport(device);
+				Message<?> sendMessage = messageTransport.sendMessage(msg);
+				if(sendMessage == null){
+					return null;
+				}
+				ProductIDBody body = (ProductIDBody)sendMessage.getBody();
+				return body.getProductinId();
+			}
+		});
+		return submit;
+	}
 }

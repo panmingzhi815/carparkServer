@@ -198,7 +198,7 @@ public class SettingViewer extends Shell {
 		tableColumn_4.setWidth(74);
 		tableColumn_4.setText("设备地址");
 		
-		TableColumn tableColumn = new TableColumn(table, SWT.NONE);
+		final TableColumn tableColumn = new TableColumn(table, SWT.NONE);
 		tableColumn.setWidth(100);
 		tableColumn.setText("进出类型");
 		
@@ -213,7 +213,11 @@ public class SettingViewer extends Shell {
 		TableColumn tableColumn7 = new TableColumn(table, SWT.NONE);
 		tableColumn7.setWidth(100);
 		tableColumn7.setText("外置音显");
-		
+
+		TableColumn tableColumn8 = new TableColumn(table, SWT.NONE);
+		tableColumn8.setWidth(100);
+		tableColumn8.setText("硬件版本");
+
 		Button button_1 = new Button(this, SWT.NONE);
 		button_1.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -235,7 +239,6 @@ public class SettingViewer extends Shell {
 					device.setSupportChinese(tableItem.getText(5));
 					device.setSupportInsideVoice(tableItem.getText(6));
 					device.setSupportOutsideVoice(tableItem.getText(7));
-					
 					cs.getDeviceList().add(device);
 				}
 				
@@ -365,16 +368,16 @@ public class SettingViewer extends Shell {
 		List<Device> deviceList = readData.getDeviceList();
 		for (Device device : deviceList) {
 			TableItem ti = new TableItem(table, SWT.BORDER);
-			String deviceName = device.getName();
-			String deviceType = device.getType();
-			String deviceAddress = device.getAddress();
-			String deviceArea = device.getArea();
-			String inoutType = device.getInoutType();
-			String supportChinese = device.getSupportChinese();
-			String supportInsideVoice = device.getSupportInsideVoice();
-			String supportOutsideVoice = device.getSupportOutsideVoice();
-			
-			ti.setText(new String[]{deviceName,deviceType,deviceAddress,deviceArea,inoutType,supportChinese,supportInsideVoice,supportOutsideVoice});
+			String deviceName = device.getName() == null ? "" : device.getName();
+			String deviceType = device.getType() == null ? "" : device.getType();
+			String deviceAddress = device.getAddress() == null ? "" : device.getAddress();
+			String deviceArea = device.getArea() == null ? "" : device.getArea();
+			String inoutType = device.getInoutType() == null ? "" : device.getInoutType();
+			String supportChinese = device.getSupportChinese() == null ? "" : device.getSupportChinese();
+			String supportInsideVoice = device.getSupportInsideVoice() == null ? "" : device.getSupportInsideVoice();
+			String supportOutsideVoice = device.getSupportOutsideVoice() == null ? "" : device.getSupportOutsideVoice();
+			String version = device.getVersion() == null ? "" : device.getVersion();
+			ti.setText(new String[]{deviceName,deviceType,deviceAddress,deviceArea,inoutType,supportChinese,supportInsideVoice,supportOutsideVoice,version});
 		}
 	}
 

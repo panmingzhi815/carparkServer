@@ -108,4 +108,19 @@ public class MessageUtil {
 		return msg;
 	}
 
+	public static Message<?> creatVersionMsg(Device device) {
+		String key = new StringBuffer().append(device.toString()).append("creatVersionMsg").toString();
+		Message<MessageBody> message = commandMap.get(key);
+		if(message != null){
+			return message;
+		}
+		EmptyBody eb = new EmptyBody();
+
+		SerialDeviceAddress serialDeviceAddress = new SerialDeviceAddress();
+		serialDeviceAddress.setAddress(device.getArea());
+		MessageHeader mh = new MessageHeader(serialDeviceAddress,DirectonType.请求,MessageConstance.Message_ReadVersion,EmptyBody.LENGTH);
+
+		Message<MessageBody> msg = new Message<MessageBody>(mh, eb);
+		return msg;
+	}
 }

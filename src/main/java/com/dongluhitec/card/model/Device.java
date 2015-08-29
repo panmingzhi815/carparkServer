@@ -16,7 +16,7 @@ public class Device implements Serializable{
 	private String supportChinese;
 	private String supportInsideVoice;
 	private String supportOutsideVoice;
-	
+	private String version;
 	
 	public String getName() {
 		return name;
@@ -68,6 +68,15 @@ public class Device implements Serializable{
 	public void setSupportOutsideVoice(String supportOutsideVoice) {
 		this.supportOutsideVoice = supportOutsideVoice;
 	}
+
+	public String getVersion() {
+		return version;
+	}
+
+	public void setVersion(String version) {
+		this.version = version;
+	}
+
 	@Override
 	public String toString() {
 		return "Device [name=" + name + ", type=" + type + ", address=" + address + ", area=" + area + ", inoutType=" + inoutType + "]";

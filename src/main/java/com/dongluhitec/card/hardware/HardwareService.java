@@ -1,15 +1,17 @@
 package com.dongluhitec.card.hardware;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
-import java.util.Date;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.collect.Maps;
+import com.google.common.io.Closer;
 import org.apache.mina.core.future.ConnectFuture;
 import org.apache.mina.core.service.IoHandlerAdapter;
 import org.apache.mina.core.session.IdleStatus;
@@ -53,6 +55,7 @@ public class HardwareService {
 	
 	private static boolean isPlayVoice = false;
 	private XinlutongJNAImpl xinlutongJNAImpl;
+	private Map<String,String> deviceVersionMap = Maps.newHashMap();
 	
 	private HardwareService(){};
 	
@@ -131,8 +134,18 @@ public class HardwareService {
 								HardwareUtil.controlSpeed(start, 300);
 								isPlayVoice = false;
 							}
+
+							if(deviceVersionMap.get(device.getName()) == null){
+								ListenableFuture<String> versionFuture = messageService.readVersion(device);
+								String version = versionFuture.get(3000, TimeUnit.MILLISECONDS);
+								device.setVersion(version);
+								deviceVersionMap.put(device.getName(),version);
+								device.setVersion(version);
+								writeData(cs);
+							}
+
 							ListenableFuture<CarparkNowRecord> carparkReadNowRecord = messageService.carparkReadNowRecord(device);
-							CarparkNowRecord carparkNowRecord = carparkReadNowRecord.get();
+							CarparkNowRecord carparkNowRecord = carparkReadNowRecord.get(5000,TimeUnit.MILLISECONDS);
 							if(carparkNowRecord != null){
 								HardwareUtil.sendCardNO(cf.getSession(), carparkNowRecord.getCardID(),carparkNowRecord.getReaderID()+"", device.getName());
 								HardwareUtil.controlSpeed(start, 3000);
@@ -341,6 +354,27 @@ public class HardwareService {
 			super.messageSent(session, message);
 		}
 		
+	}
+
+	private final String dataFilePath = "donglu.data";
+
+	public void writeData(CarparkSetting cs) {
+		Closer closer = Closer.create();
+		try{
+			FileOutputStream fos = new FileOutputStream(dataFilePath);
+			FileOutputStream register = closer.register(fos);
+			ObjectOutputStream oos = new ObjectOutputStream(register);
+			ObjectOutputStream register2 = closer.register(oos);
+			register2.writeObject(cs);
+			CommonUI.info("提示", "操作成功!");
+		}catch(Exception e){
+			e.printStackTrace();
+			CommonUI.error("错误", "保存失败");
+		}finally{
+			try {
+				closer.close();
+			} catch (IOException e) {}
+		}
 	}
 
 }

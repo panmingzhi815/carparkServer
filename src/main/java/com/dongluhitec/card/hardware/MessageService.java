@@ -51,4 +51,10 @@ public interface MessageService {
 	 */
 	ListenableFuture<Boolean> setAD(Device device, String adStr);
 
+	/**
+	 * 读版本号
+	 * @param device
+	 * @return
+	 */
+	ListenableFuture<String> readVersion(Device device);
 }
