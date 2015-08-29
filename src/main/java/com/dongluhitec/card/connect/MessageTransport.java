@@ -128,8 +128,6 @@ public class MessageTransport {
 	public synchronized void sendMessageNoReturn(Message<?> message) {
 		try {
 			open();
-
-			IoSession session = connect.getSession();
 			WriteFuture write = session.write(message);
 			write.awaitUninterruptibly(100);
 		}finally {
