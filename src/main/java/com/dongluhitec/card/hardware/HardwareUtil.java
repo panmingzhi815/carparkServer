@@ -24,6 +24,8 @@ import com.dongluhitec.card.model.CarparkSetting;
 import com.dongluhitec.card.model.Device;
 import com.google.common.base.Strings;
 import com.google.common.util.concurrent.Uninterruptibles;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HardwareUtil {
 
@@ -35,6 +37,7 @@ public class HardwareUtil {
 
 	private static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyddMM");
 	private static SimpleDateFormat simpleDateFormat2 = new SimpleDateFormat("yyyyddMMHHmmss");
+	private static Logger LOGGER = LoggerFactory.getLogger(HardwareUtil.class);
 
 	public static String checkSubpackage(IoSession session, Object message) {
 		String msg = ((String) message).trim();
@@ -76,6 +79,9 @@ public class HardwareUtil {
 	}
 
 	public static void sendCardNO(IoSession session, String cardNO, String readerID, String deviceName) {
+		if(session == null || !session.isConnected()){
+			LOGGER.error("会话不存在或己关闭，暂不能发送刷卡信息");
+		}
 		try {
 			Document document = DocumentHelper.createDocument();
 			Element root = document.addElement("dongluCarpark");
@@ -95,6 +101,9 @@ public class HardwareUtil {
 	}
 
 	public static String responseDeviceControl(IoSession session, Document dom) {
+		if(session == null || !session.isConnected()){
+			LOGGER.error("会话不存在或己关闭，返回响应");
+		}
 		try {
 			String value = "<dongluCarpark><result>true</result></dongluCarpark>";
 			WebMessage wm = new WebMessage(WebMessageType.成功, value);

@@ -56,7 +56,8 @@ public class HardwareService {
 	private static boolean isPlayVoice = false;
 	private XinlutongJNAImpl xinlutongJNAImpl;
 	private Map<String,String> deviceVersionMap = Maps.newHashMap();
-	
+	private IoSession session;
+
 	private HardwareService(){};
 	
 	public static HardwareService getInstance(){
@@ -76,6 +77,7 @@ public class HardwareService {
 			newSingleThreadExecutor = Executors.newSingleThreadExecutor();
 		}
 		startWebConnector();
+		checkWebConnector();
 		checkDateTime();
 		startLogging();
 		startListne();
@@ -90,7 +92,7 @@ public class HardwareService {
     			xlr = new XinlutongResult() {
     				@Override
     				public void invok(String ip, int channel, String plateNO, byte[] bigImage, byte[] smallImage) {
-    					HardwareUtil.setPlateInfo(cf.getSession(),name,ip,plateNO,bigImage,smallImage);
+    					HardwareUtil.setPlateInfo(session,name,ip,plateNO,bigImage,smallImage);
     				}
     			};
 			}
@@ -147,7 +149,7 @@ public class HardwareService {
 							ListenableFuture<CarparkNowRecord> carparkReadNowRecord = messageService.carparkReadNowRecord(device);
 							CarparkNowRecord carparkNowRecord = carparkReadNowRecord.get(5000,TimeUnit.MILLISECONDS);
 							if(carparkNowRecord != null){
-								HardwareUtil.sendCardNO(cf.getSession(), carparkNowRecord.getCardID(),carparkNowRecord.getReaderID()+"", device.getName());
+								HardwareUtil.sendCardNO(session, carparkNowRecord.getCardID(),carparkNowRecord.getReaderID()+"", device.getName());
 								HardwareUtil.controlSpeed(start, 3000);
 							}
 							EventBusUtil.post(new EventInfo(EventType.硬件通讯正常, "硬件通讯恢复正常"));
@@ -206,9 +208,11 @@ public class HardwareService {
 			connector.setConnectTimeoutCheckInterval(30);
 			// 连结到服务器:
 			cf = connector.connect(new InetSocketAddress(cs.getIp(), Integer.parseInt(cs.getPort())));
-			cf.awaitUninterruptibly(5,TimeUnit.SECONDS);
-			
-			checkWebConnector();
+			boolean b = cf.awaitUninterruptibly(5, TimeUnit.SECONDS);
+			if(b == false || cf.getException() != null){
+				EventBusUtil.post(new EventInfo(EventType.外接服务通讯异常, "当前主机与对接服务通讯失败,3秒后会自动重联"));
+			}
+			this.session = cf.getSession();
 		} catch (Exception e) {
 			CommonUI.error("错误", "连接失败");
 		}
@@ -221,27 +225,30 @@ public class HardwareService {
 			@Override
 			public void run() {
 				try{
-					if(cf.getSession().isConnected()){
+					String ip = cs.getIp();
+					String port = cs.getPort();
+					LOGGER.debug("正在检查外接服务,ip:{} port:{}",ip,port);
+					if(session == null || !session.isConnected()){
+						LOGGER.debug("检查到会话不存在或己关闭，准备重新建立会话");
+
+						EventBusUtil.post(new EventInfo(EventType.外接服务通讯异常, "当前主机与对接服务通讯失败,3秒后会自动重联"));
+
+						ConnectFuture connect = connector.connect(new InetSocketAddress(cs.getIp(), Integer.parseInt(cs.getPort())));
+						boolean awaitUninterruptibly = connect.awaitUninterruptibly(10,TimeUnit.SECONDS);
+						if(awaitUninterruptibly && connect.getException() == null){
+							cf = connect;
+							session = cf.getSession();
+							isSendDevice = false;
+						}
+					}else{
 						EventBusUtil.post(new EventInfo(EventType.外接服务通讯正常, "外接服务通讯恢复正常"));
 						if(isSendDevice == false){
-							HardwareUtil.sendDeviceInfo(cf.getSession(), cs);
+							HardwareUtil.sendDeviceInfo(session, cs);
 							isSendDevice = true;
 						}
-						return;
 					}
-					cf = connector.connect(new InetSocketAddress(cs.getIp(), Integer.parseInt(cs.getPort())));
-					boolean awaitUninterruptibly = cf.awaitUninterruptibly(5,TimeUnit.SECONDS);
-					if(!awaitUninterruptibly){
-						EventBusUtil.post(new EventInfo(EventType.外接服务通讯异常, "当前主机与对接服务通讯失败,3秒后会自动重联"));
-						isSendDevice = false;
-						return;
-					}
-					
 				}catch(Exception e){
-					isSendDevice = false;
-					cf = connector.connect(new InetSocketAddress(cs.getIp(), Integer.parseInt(cs.getPort())));
-					cf.awaitUninterruptibly(500,TimeUnit.MILLISECONDS);
-					EventBusUtil.post(new EventInfo(EventType.外接服务通讯异常, "当前主机与对接服务通讯失败,3秒后会自动重联"));
+					LOGGER.error("检查外接服务发生错误",e);
 				}
 			}
 		},5000,2000);

@@ -360,10 +360,10 @@ public class SettingViewer extends Shell {
 		if(readData == null){
 			return;
 		}
-		text_ip.setText(readData.getIp());
-		text_port.setText(readData.getPort());
-		text.setText(readData.getStationName());
-		text_1.setText(readData.getPlateDeviceip());
+		text_ip.setText(readData.getIp() == null ? "" : readData.getIp());
+		text_port.setText(readData.getPort() == null ? "" : readData.getPort());
+		text.setText(readData.getStationName() == null ? "" : readData.getStationName());
+		text_1.setText(readData.getPlateDeviceip() == null ? "" : readData.getPlateDeviceip());
 		
 		List<Device> deviceList = readData.getDeviceList();
 		for (Device device : deviceList) {

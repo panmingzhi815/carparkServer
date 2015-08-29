@@ -133,20 +133,21 @@ public class CarparkApp {
 					if(deviceExceStart == 0){
 						deviceExceStart = System.currentTimeMillis();
 						deviceExceTimes = 1;
-					}
-					deviceExceTimes++;
-					if(deviceExceTimes < 10){
 						return;
 					}
-					if(System.currentTimeMillis() - deviceExceStart > 5 * 1000){
+					deviceExceTimes++;
+					if(deviceExceTimes < 3){
+						return;
+					}
+					if(System.currentTimeMillis() - deviceExceStart > 10 * 1000){
 						deviceExceStart = System.currentTimeMillis();
-						deviceExceTimes = 1;
+						deviceExceTimes = 0;
 						return;
 					}
 					trayItem.setImage(ImageUtil.getImg("hardware_error_24.ico"));
 					createTip(event.getEventType().name(),(String)event.getObj());
 					deviceExceStart = System.currentTimeMillis();
-					deviceExceTimes = 1;
+					deviceExceTimes = 0;
 					break;
 				case 外接服务通讯异常:
 					trayItem.setImage(ImageUtil.getImg("hardware_server_warn.ico"));
