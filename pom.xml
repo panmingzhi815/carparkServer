@@ -14,6 +14,7 @@
 		<commons-io.version>2.1</commons-io.version>
 		<slf4j.version>1.7.7</slf4j.version>
 		<logback.version>1.1.2</logback.version>
+		<joda.time>2.1</joda.time>
 	</properties>
 
 	<repositories>
@@ -133,6 +134,12 @@
 			<groupId>org.eclipse.jface</groupId>
 			<artifactId>databinding</artifactId>
 			<version>1.1.0-I20070606-0010</version>
+		</dependency>
+
+		<dependency>
+			<groupId>joda-time</groupId>
+			<artifactId>joda-time</artifactId>
+			<version>${joda.time}</version>
 		</dependency>
 
 	</dependencies>

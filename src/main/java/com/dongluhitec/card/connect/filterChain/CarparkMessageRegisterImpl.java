@@ -4,11 +4,7 @@ import java.util.Map;
 
 import com.dongluhitec.card.connect.MessageBodyInfo;
 import com.dongluhitec.card.connect.MessageConstance;
-import com.dongluhitec.card.connect.body.CardIDBody;
-import com.dongluhitec.card.connect.body.CarparkNowRecordBody;
-import com.dongluhitec.card.connect.body.EmptyBody;
-import com.dongluhitec.card.connect.body.ScreenVoiceDoorBody;
-import com.dongluhitec.card.connect.body.SimpleBody;
+import com.dongluhitec.card.connect.body.*;
 
 public class CarparkMessageRegisterImpl extends AbstractMessageRegister {
 
@@ -17,7 +13,7 @@ public class CarparkMessageRegisterImpl extends AbstractMessageRegister {
 		requestMap.put(MessageConstance.Message_ReadNowRecord, new MessageBodyInfo(EmptyBody.LENGTH,EmptyBody.class));
 		requestMap.put(MessageConstance.Message_OpenDoor, new MessageBodyInfo(SimpleBody.LENGTH,SimpleBody.class));
 		requestMap.put(MessageConstance.Message_ScreenVoiceDoor, new MessageBodyInfo(ScreenVoiceDoorBody.LENGTH,ScreenVoiceDoorBody.class));
-
+		requestMap.put(MessageConstance.Message_SetTime, new MessageBodyInfo(SetDateTimeBody.LENGTH,SetDateTimeBody.class));
 	}
 
 	@Override

@@ -1,5 +1,6 @@
 package com.dongluhitec.card.hardware.impl;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -94,7 +95,7 @@ public class MessageServiceImpl implements MessageService {
 	@Override
 	public ListenableFuture<Boolean> carparkScreenVoiceDoor(final Device device,final int screenID,final int voice,final int font,final int door,final String text){
 		LOGGER.debug("carpark's screen and voice and door for :{}" , device);
-		final Message<?> msg = MessageUtil.createScreenVoiceDoorMsg(device,screenID,voice,font,door,text);
+		final Message<?> msg = MessageUtil.createScreenVoiceDoorMsg(device, screenID, voice, font, door, text);
 		ListenableFuture<Boolean> submit = listeningDecorator.submit(new Callable<Boolean>() {
 			@Override
 			public Boolean call() throws Exception {
@@ -109,4 +110,15 @@ public class MessageServiceImpl implements MessageService {
 		});
 		return submit;
 	}
+
+	@Override
+	public void setDateTime(final Device device,final Date date){
+		LOGGER.debug("carpark's set date :{} for :{}" ,date, device);
+		final Message<?> msg = MessageUtil.createSetDateTime(device, date);
+		listeningDecorator.submit(() -> {
+			MessageTransport messageTransport = getMessageTransport(device);
+			messageTransport.sendMessageNoReturn(msg);
+		});
+	}
+
 }

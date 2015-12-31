@@ -1,5 +1,6 @@
 package com.dongluhitec.card.hardware;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -8,11 +9,7 @@ import com.dongluhitec.card.connect.Message;
 import com.dongluhitec.card.connect.MessageBody;
 import com.dongluhitec.card.connect.MessageConstance;
 import com.dongluhitec.card.connect.MessageHeader;
-import com.dongluhitec.card.connect.body.EmptyBody;
-import com.dongluhitec.card.connect.body.OpenDoorEnum;
-import com.dongluhitec.card.connect.body.ScreenVoiceDoorBody;
-import com.dongluhitec.card.connect.body.SimpleBody;
-import com.dongluhitec.card.connect.body.VoiceBody;
+import com.dongluhitec.card.connect.body.*;
 import com.dongluhitec.card.connect.util.ByteUtils;
 import com.dongluhitec.card.connect.util.SerialDeviceAddress;
 import com.dongluhitec.card.model.Device;
@@ -91,6 +88,17 @@ public class MessageUtil {
 		Message<MessageBody> msg = new Message<MessageBody>(mh, sb);
 		commandMap.put(key, msg);
 		return msg;
+	}
+
+	public static Message<?> createSetDateTime(Device device, Date date) {
+		SetDateTimeBody setDateTimeBody = new SetDateTimeBody();
+		setDateTimeBody.setDate(date);
+
+		SerialDeviceAddress serialDeviceAddress = new SerialDeviceAddress();
+		serialDeviceAddress.setAddress(device.getArea());
+		MessageHeader mh = new MessageHeader(serialDeviceAddress,DirectonType.请求,MessageConstance.Message_SetTime,SetDateTimeBody.LENGTH);
+
+		return new Message<MessageBody>(mh, setDateTimeBody);
 	}
 
 	public static void main(String[] args) {

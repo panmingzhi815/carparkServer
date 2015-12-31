@@ -5,6 +5,8 @@ import com.dongluhitec.card.model.CarparkNowRecord;
 import com.dongluhitec.card.model.Device;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.util.Date;
+
 public interface MessageService {
 
 	/**
@@ -33,5 +35,12 @@ public interface MessageService {
 	 * @return
 	 */
 	ListenableFuture<Boolean> carparkScreenVoiceDoor(Device device, int screenID, int voice, int font, int door, String text);
+
+	/**
+	 * 下发设备时间
+	 * @param device 操作设备
+	 * @param date 时间
+	 */
+	void setDateTime(Device device, Date date);
 
 }

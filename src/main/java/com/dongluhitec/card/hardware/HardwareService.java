@@ -2,6 +2,7 @@ package com.dongluhitec.card.hardware;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
+import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -43,7 +44,7 @@ public class HardwareService {
 	private final long checkConnectorSecond = 3;
 	private NioSocketAcceptor acceptor;
 	private final int PORT = 9124;
-	
+	private long lastDownloadTime = 0;
 	private static boolean isPlayVoice = false;
 	
 	private HardwareService(){};
@@ -101,6 +102,10 @@ public class HardwareService {
 							if(isPlayVoice == true){
 								HardwareUtil.controlSpeed(start, 300);
 								isPlayVoice = false;
+							}
+							if (TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - lastDownloadTime) > 10){
+								messageService.setDateTime(device,new Date());
+								lastDownloadTime = System.currentTimeMillis();
 							}
 							ListenableFuture<CarparkNowRecord> carparkReadNowRecord = messageService.carparkReadNowRecord(device);
 							CarparkNowRecord carparkNowRecord = carparkReadNowRecord.get(5000,TimeUnit.MILLISECONDS);
