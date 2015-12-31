@@ -95,6 +95,7 @@ public class HardwareService {
 					List<Device> deviceList = cs.getDeviceList();
 					for (Device device : deviceList) {
 						LOGGER.debug("开始轮询设备:{}",device.getName());
+						final String address = device.getArea();
 						long start = System.currentTimeMillis();
 						try{
 							if(isPlayVoice == true){
@@ -102,16 +103,20 @@ public class HardwareService {
 								isPlayVoice = false;
 							}
 							ListenableFuture<CarparkNowRecord> carparkReadNowRecord = messageService.carparkReadNowRecord(device);
-							CarparkNowRecord carparkNowRecord = carparkReadNowRecord.get();
+							CarparkNowRecord carparkNowRecord = carparkReadNowRecord.get(5000,TimeUnit.MILLISECONDS);
 							if(carparkNowRecord != null){
 								HardwareUtil.sendCardNO(cf.getSession(), carparkNowRecord.getCardID(),carparkNowRecord.getReaderID()+"", device.getName());
 								HardwareUtil.controlSpeed(start, 3000);
 							}
+							device.setArea("255.1");
+							messageService.carparkReadNowRecord(device).get(5000,TimeUnit.MILLISECONDS);
 							EventBusUtil.post(new EventInfo(EventType.硬件通讯正常, "硬件通讯恢复正常"));
 						}catch(Exception e){
+							LOGGER.error("采集实时记录时发生错误",e);
 							EventBusUtil.post(new EventInfo(EventType.硬件通讯异常, "当前主机与停车场硬件设备通讯时发生异常,请检查"));
 						}finally{
 							HardwareUtil.controlSpeed(start, 400);
+							device.setArea(address);
 						}
 					}
 				}catch(Exception e){}
@@ -172,7 +177,7 @@ public class HardwareService {
 					EventBusUtil.post(new EventInfo(EventType.外接服务通讯异常, "当前主机与对接服务通讯失败,3秒后会自动重联"));
 				}
 			}
-		},5000,100);
+		},5000,5000);
 	}
 	
 	class listenHandler extends IoHandlerAdapter{
@@ -189,7 +194,7 @@ public class HardwareService {
 			final Document dom = DocumentHelper.parseText(wm.getContent());
 			final Element rootElement = dom.getRootElement();
 			
-			if(wm.getType() == WebMessageType.成功){
+			if(wm.getType() == WebMessageType.成功) {
 				HardwareUtil.responseResult(session,dom);
 			}
 			

@@ -4,6 +4,7 @@ import image.ImageUtil;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
@@ -30,6 +31,11 @@ import com.google.common.eventbus.Subscribe;
 import com.jamierf.rxtx.RXTXLoader;
 
 public class CarparkApp {
+
+	private long lastDeviceSuccess;
+	private long lastComputerSuccess;
+	private boolean isDeviceFaile = false;
+	private boolean isComputerFaile = false;
 
 	public static void main(String[] args) throws URISyntaxException {
 		
@@ -119,9 +125,6 @@ public class CarparkApp {
 			}
 		}).start();
 	}
-	
-	private long deviceExceStart = 0;
-	private long deviceExceTimes = 0;
 
 	@Subscribe
 	public void listenTrayInfo(final EventInfo event) {
@@ -130,45 +133,43 @@ public class CarparkApp {
 			public void run() {
 				switch (event.getEventType()) {
 				case 硬件通讯异常:
-					if(deviceExceStart == 0){
-						deviceExceStart = System.currentTimeMillis();
-						deviceExceTimes = 1;
+					if (!isDeviceFaile){
+						if (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - lastDeviceSuccess) > 8){
+							trayItem.setImage(ImageUtil.getImg("hardware_error_24.ico"));
+							createTip(event.getEventType().name(),(String)event.getObj());
+						}
+
 					}
-					deviceExceTimes++;
-					if(deviceExceTimes < 10){
-						return;
-					}
-					if(System.currentTimeMillis() - deviceExceStart > 5 * 1000){
-						deviceExceStart = System.currentTimeMillis();
-						deviceExceTimes = 1;
-						return;
-					}
-					trayItem.setImage(ImageUtil.getImg("hardware_error_24.ico"));
-					createTip(event.getEventType().name(),(String)event.getObj());
-					deviceExceStart = System.currentTimeMillis();
-					deviceExceTimes = 1;
+					isDeviceFaile = true;
 					break;
 				case 外接服务通讯异常:
-					trayItem.setImage(ImageUtil.getImg("hardware_server_warn.ico"));
-					createTip(event.getEventType().name(),(String)event.getObj());
+					if(!isComputerFaile) {
+						if (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - lastComputerSuccess) > 8){
+							trayItem.setImage(ImageUtil.getImg("hardware_server_warn.ico"));
+							createTip(event.getEventType().name(), (String) event.getObj());
+						}
+					}
+					isComputerFaile = true;
 					break;
 				case 外接服务通讯正常:
-					Image image = trayItem.getImage();
-					Image img = ImageUtil.getImg("hardware_server_warn.ico");
-					if (image != img) {
-						return;
+					if(isComputerFaile) {
+						if (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - lastComputerSuccess) > 5) {
+							trayItem.setImage(ImageUtil.getImg("hardware_logging_24.ico"));
+							createTip(event.getEventType().name(), (String) event.getObj());
+						}
 					}
-					trayItem.setImage(ImageUtil.getImg("hardware_logging_24.ico"));
-					createTip(event.getEventType().name(),(String)event.getObj());
+					lastComputerSuccess = System.currentTimeMillis();
+					isComputerFaile = false;
 					break;
 				case 硬件通讯正常:
-					Image image2 = trayItem.getImage();
-					Image img2 = ImageUtil.getImg("hardware_error_24.ico");
-					if (image2 != img2) {
-						return;
+					if(isDeviceFaile) {
+						if (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - lastDeviceSuccess) > 5){
+							trayItem.setImage(ImageUtil.getImg("hardware_logging_24.ico"));
+							createTip(event.getEventType().name(), (String) event.getObj());
+						}
 					}
-					trayItem.setImage(ImageUtil.getImg("hardware_logging_24.ico"));
-					createTip(event.getEventType().name(),(String)event.getObj());
+					lastDeviceSuccess = System.currentTimeMillis();
+					isDeviceFaile = false;
 					break;
 				default:
 					break;

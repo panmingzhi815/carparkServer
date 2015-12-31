@@ -13,6 +13,7 @@ import com.dongluhitec.card.connect.body.OpenDoorEnum;
 import com.dongluhitec.card.connect.body.ScreenVoiceDoorBody;
 import com.dongluhitec.card.connect.body.SimpleBody;
 import com.dongluhitec.card.connect.body.VoiceBody;
+import com.dongluhitec.card.connect.util.ByteUtils;
 import com.dongluhitec.card.connect.util.SerialDeviceAddress;
 import com.dongluhitec.card.model.Device;
 
@@ -53,6 +54,22 @@ public class MessageUtil {
 		commandMap.put(key, msg);
 		return msg;
 	}
+
+	public static Message<?> createReadNextRecordMsg(Device device) {
+		String key = new StringBuffer().append(device.toString()).append("createReadNextRecordMsg").toString();
+		Message<MessageBody> message = commandMap.get(key);
+		if(message != null){
+			return message;
+		}
+
+		SerialDeviceAddress serialDeviceAddress = new SerialDeviceAddress();
+		serialDeviceAddress.setAddress(device.getArea());
+		MessageHeader mh = new MessageHeader(serialDeviceAddress,DirectonType.请求,MessageConstance.Message_ReadNowRecord,EmptyBody.LENGTH);
+		EmptyBody sb = new EmptyBody();
+		Message<MessageBody> msg = new Message<MessageBody>(mh, sb);
+		commandMap.put(key, msg);
+		return msg;
+	}
 	
 	public static Message<?> createScreenVoiceDoorMsg(Device device, int screenID, int voice, int font, int door, String text) {
 		String key = new StringBuffer().append(device.toString()).append(screenID).append(voice).append(font).append(door).append(text).append("createScreenVoiceDoorMsg").toString();
@@ -74,6 +91,14 @@ public class MessageUtil {
 		Message<MessageBody> msg = new Message<MessageBody>(mh, sb);
 		commandMap.put(key, msg);
 		return msg;
+	}
+
+	public static void main(String[] args) {
+		Device device = new Device();
+		device.setAddress("COM1");
+		device.setArea("255.1");
+		Message<?> readNowRecordMsg = createReadNowRecordMsg(device);
+		System.out.println(ByteUtils.byteArrayToHexString(readNowRecordMsg.toBytes()));
 	}
 
 }

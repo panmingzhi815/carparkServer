@@ -90,7 +90,10 @@ public class MessageHeader implements Bytenize {
 		header[MessageConstance.MESSAGE_HEADER_SOH] = MessageConstance.MESSAGE_HEADER_SOH_VALUE;
 		header[MessageConstance.MESSAGE_HEADER_PT] = (byte) (this.directonType == DirectonType.请求 ? 'W' : 'w');
 
-		byte[] bytes2 = new BCDAddressAdaptor(this.serialDeviceAddress).getBytes();
+		byte[] bytes2 = new byte[4];
+		bytes2[1] = (byte)this.serialDeviceAddress.getFirstAddrPart();
+		bytes2[3] = (byte)this.serialDeviceAddress.getSecondAddrPart();
+//		byte[] bytes2 = new BCDAddressAdaptor(this.serialDeviceAddress).getBytes();
 		System.arraycopy(bytes2, 0, header, MessageConstance.MESSAGE_HEADER_MID_ADDR, bytes2.length);
 
 		header[MessageConstance.MESSAGE_HEADER_FUNCCODE] = this.functionCode;
