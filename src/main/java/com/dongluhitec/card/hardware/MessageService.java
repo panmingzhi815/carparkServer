@@ -43,4 +43,12 @@ public interface MessageService {
 	 */
 	void setDateTime(Device device, Date date);
 
+	/**
+	 * 下发广告语
+	 * @param device
+	 * @param adStr
+	 * @return
+	 */
+	ListenableFuture<Boolean> setAD(Device device, String adStr);
+
 }

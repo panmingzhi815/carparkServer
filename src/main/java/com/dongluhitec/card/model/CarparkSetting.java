@@ -12,7 +12,7 @@ public class CarparkSetting implements Serializable{
 	
 	private String ip;
 	private String port;
-	
+	private String ad;
 	private String stationName;
 	
 	private List<Device> deviceList = Lists.newArrayList();
@@ -57,6 +57,17 @@ public class CarparkSetting implements Serializable{
 
 	public void setPort(String port) {
 		this.port = port;
+	}
+
+	public String getAd() {
+		if(ad == null){
+			return "深圳市东陆高新";
+		}
+		return ad;
+	}
+
+	public void setAd(String ad) {
+		this.ad = ad;
 	}
 
 	public List<Device> getDeviceList() {

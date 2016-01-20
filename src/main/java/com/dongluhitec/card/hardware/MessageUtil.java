@@ -109,4 +109,20 @@ public class MessageUtil {
 		System.out.println(ByteUtils.byteArrayToHexString(readNowRecordMsg.toBytes()));
 	}
 
+	public static Message<?> createADScreenMsg(Device device, String adStr) {
+		String key = device.toString() + adStr;
+		Message<MessageBody> message = commandMap.get(key);
+		if(message != null){
+			return message;
+		}
+		ADScreenBody adScreenBody = new ADScreenBody();
+		adScreenBody.setText(adStr);
+
+		SerialDeviceAddress serialDeviceAddress = new SerialDeviceAddress();
+		serialDeviceAddress.setAddress(device.getArea());
+		MessageHeader mh = new MessageHeader(serialDeviceAddress,DirectonType.请求,MessageConstance.Message_AD,ADScreenBody.LENGTH);
+
+		return new Message<MessageBody>(mh, adScreenBody);
+	}
+
 }

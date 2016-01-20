@@ -33,6 +33,7 @@ import com.dongluhitec.card.util.EventBusUtil;
 import com.dongluhitec.card.util.EventInfo;
 import com.dongluhitec.card.util.EventInfo.EventType;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.Uninterruptibles;
 
 public class HardwareService {
 	private Logger LOGGER = LoggerFactory.getLogger(HardwareService.class);
@@ -45,6 +46,7 @@ public class HardwareService {
 	private NioSocketAcceptor acceptor;
 	private final int PORT = 9124;
 	private long lastDownloadTime = 0;
+	private long lastDownloadad = 0;
 	private static boolean isPlayVoice = false;
 	
 	private HardwareService(){};
@@ -106,6 +108,14 @@ public class HardwareService {
 							if (TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - lastDownloadTime) > 10){
 								messageService.setDateTime(device,new Date());
 								lastDownloadTime = System.currentTimeMillis();
+								LOGGER.info("下载时间:{}到设备:{}",new Date(),device);
+								Uninterruptibles.sleepUninterruptibly(200, TimeUnit.MILLISECONDS);
+							}
+							if (TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - lastDownloadad) > 10){
+								messageService.setAD(device,cs.getAd());
+								lastDownloadad = System.currentTimeMillis();
+								LOGGER.info("下载广告:{}到设备:{}",cs.getAd(),device);
+								Uninterruptibles.sleepUninterruptibly(200, TimeUnit.MILLISECONDS);
 							}
 							ListenableFuture<CarparkNowRecord> carparkReadNowRecord = messageService.carparkReadNowRecord(device);
 							CarparkNowRecord carparkNowRecord = carparkReadNowRecord.get(5000,TimeUnit.MILLISECONDS);

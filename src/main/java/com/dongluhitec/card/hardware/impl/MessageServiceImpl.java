@@ -110,6 +110,21 @@ public class MessageServiceImpl implements MessageService {
 		});
 		return submit;
 	}
+	
+	@Override
+	public ListenableFuture<Boolean> setAD(final Device device, String adStr) {
+		LOGGER.debug("carpark's set ad:{} for:{}" , adStr, device);
+		final Message<?> msg = MessageUtil.createADScreenMsg(device, adStr);
+		return listeningDecorator.submit(() -> {
+            MessageTransport messageTransport = getMessageTransport(device);
+            Message<?> sendMessage = messageTransport.sendMessage(msg);
+            if(sendMessage == null){
+                return null;
+            }
+            SimpleBody body = (SimpleBody)sendMessage.getBody();
+            return body.getSimpleBody() == 'y';
+        });
+	}
 
 	@Override
 	public void setDateTime(final Device device,final Date date){

@@ -70,7 +70,7 @@ public class Device implements Serializable{
 	}
 	@Override
 	public String toString() {
-		return "Device [name=" + name + ", type=" + type + ", address=" + address + ", area=" + area + ", inoutType=" + inoutType + "]";
+		return "Device [name=" + name + ", type=" + type + ", address=" + address + ", area=" + area + ", inoutType=" + "]";
 	}
 	
 	
